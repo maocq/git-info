@@ -1,8 +1,13 @@
 package controllers
 
+import cats.data.EitherT
+import cats.implicits._
 import javax.inject._
-import play.api._
+import monix.eval.Task
+import monix.execution.Scheduler.Implicits.global
 import play.api.mvc._
+
+import scala.concurrent.Future
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -19,6 +24,20 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
    * a path of `/`.
    */
   def index() = Action { implicit request: Request[AnyContent] =>
+
+    (for {
+      x <- EitherT(testTask)
+      y <- EitherT(Task.deferFuture(testFuture))
+    } yield x + y)
+      .fold(left => left + "=(", right => right + " =)")
+      .foreach(println(_))
+
     Ok(views.html.index())
   }
+
+  def testTask: Task[Either[String, Int]] = Task(1.asRight)
+
+  def testFuture: Future[Either[String, Int]] = Future(2.asRight)
+
+
 }

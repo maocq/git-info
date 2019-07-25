@@ -5,10 +5,16 @@ version := "1.0-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.13.0"
+scalaVersion := "2.12.4"
+scalacOptions += "-Ypartial-unification"
 
 libraryDependencies += guice
-libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test
+libraryDependencies ++= Seq(
+  ws,
+  "org.typelevel"                   %% "cats-core"               % "2.0.0-M4",
+  "io.monix"                        %% "monix"                   % "3.0.0-RC3",
+  "org.scalatestplus.play"          %% "scalatestplus-play"      % "4.0.3" % Test
+)
 
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.maocq.controllers._"
