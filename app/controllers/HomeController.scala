@@ -2,7 +2,7 @@ package controllers
 
 import cats.data.EitherT
 import cats.implicits._
-import infraestructura.{CommitGitLabDTO, RespuestaHTTP, ServicioHTTP, TransformadorDTOs}
+import infraestructura.{CommitDiffGitLabDTO, CommitGitLabDTO, RespuestaHTTP, ServicioHTTP, TransformadorDTOs}
 import javax.inject._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
@@ -16,7 +16,7 @@ import scala.concurrent.Future
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(http: ServicioHTTP[List[CommitGitLabDTO]], ws: WSClient, cc: ControllerComponents)
+class HomeController @Inject()(http: ServicioHTTP, ws: WSClient, cc: ControllerComponents)
   extends AbstractController(cc) with TransformadorDTOs {
 
   /**
@@ -30,7 +30,7 @@ class HomeController @Inject()(http: ServicioHTTP[List[CommitGitLabDTO]], ws: WS
 
     (for {
       _ <- EitherT(testTask)
-      y <- EitherT(Task.deferFuture(commits))
+      y <- EitherT(Task.deferFuture(commitsDiff))
     } yield y.respuesta)
       .fold(left => left + "=(", right => right)
       .foreach(println(_))
@@ -43,7 +43,13 @@ class HomeController @Inject()(http: ServicioHTTP[List[CommitGitLabDTO]], ws: WS
   def testFuture: Future[Either[String, Int]] = Future(2.asRight)
 
   def commits: Future[Either[String, RespuestaHTTP[List[CommitGitLabDTO]]]] = {
-    http.get("https://gitlab.seven4n.com/api/v4/projects/580/repository/commits", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
+    http.get[List[CommitGitLabDTO]]("https://gitlab.seven4n.com/api/v4/projects/580/repository/commits", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
+      .map(_.leftMap(_.toString))
+  }
+
+  def commitsDiff: Future[Either[String, RespuestaHTTP[List[CommitDiffGitLabDTO]]]] = {
+    http.get[List[CommitDiffGitLabDTO]](
+      "https://gitlab.seven4n.com/api/v4/projects/580/repository/commits/56829dddb4d80b6e51de207e51a5baa1e66edfaf/diff", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
       .map(_.leftMap(_.toString))
   }
 
