@@ -15,7 +15,7 @@ import scala.concurrent.Future
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(http: ServicioHTTP, cc: ControllerComponents)
+class HomeController @Inject()(http: ServiceHTTP, cc: ControllerComponents)
   extends AbstractController(cc) with TransformadorDTOs {
 
   /**
