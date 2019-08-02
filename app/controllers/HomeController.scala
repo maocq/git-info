@@ -27,10 +27,19 @@ class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: Con
    * a path of `/`.
    */
   def index() = Action { implicit request: Request[AnyContent] =>
+    /*
+    for {
+      x <- EitherT(gitLab.getProject(580))
+      y <- EitherT(gitLab.getCommits(580))
+      z <- EitherT(gitLab.getCommitsDiff(580, "56829dddb4d80b6e51de207e51a5baa1e66edfaf"))
+    } yield {
+      (x, y, z)
+    }
+     */
 
     (for {
       _ <- EitherT(testTask)
-      y <- EitherT(Task.deferFuture(commitsDiff))
+      y <- EitherT(Task.deferFuture(gitLab.getProject(580)))
     } yield y.response)
       .fold(left => left + "=(", right => right)
       .foreach(println(_))
@@ -41,16 +50,5 @@ class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: Con
   def testTask: Task[Either[String, Int]] = Task(1.asRight)
 
   def testFuture: Future[Either[String, Int]] = Future(2.asRight)
-
-  def commits: Future[Either[String, ResponseHTTP[List[CommitGitLabDTO]]]] = {
-    http.get[List[CommitGitLabDTO]]("https://gitlab.seven4n.com/api/v4/projects/586/repository/commits?per_page=100", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
-      .map(_.leftMap(_.toString))
-  }
-
-  def commitsDiff: Future[Either[String, ResponseHTTP[List[CommitDiffGitLabDTO]]]] = {
-    http.get[List[CommitDiffGitLabDTO]](
-      "https://gitlab.seven4n.com/api/v4/projects/580/repository/commits/56829dddb4d80b6e51de207e51a5baa1e66edfaf/diff", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
-      .map(_.leftMap(_.toString))
-  }
 
 }
