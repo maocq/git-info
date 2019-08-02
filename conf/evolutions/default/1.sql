@@ -13,7 +13,6 @@ CREATE TABLE projects
     ssh_url_to_repo VARCHAR(250) NOT NULL,
     http_url_to_repo VARCHAR(250) NOT NULL,
     web_url VARCHAR(250) NOT NULL,
-    readme_url VARCHAR(250) NOT NULL,
 
     CONSTRAINT project_pk PRIMARY KEY (id)
 );
@@ -35,11 +34,31 @@ CREATE TABLE commits
     project_id INTEGER NOT NULL,
 
     CONSTRAINT commit_pk PRIMARY KEY (id),
-    CONSTRAINT project_id_fk FOREIGN KEY (project_id) REFERENCES projects (id)
+    CONSTRAINT commit_project_id_fk FOREIGN KEY (project_id) REFERENCES projects (id)
+);
+
+CREATE TABLE diffs
+(
+    id SERIAL,
+    old_path VARCHAR(250) NOT NULL,
+    new_path VARCHAR(250) NOT NULL,
+    a_mode VARCHAR(100) NOT NULL,
+    b_mode VARCHAR(100) NOT NULL,
+    new_file BOOLEAN NOT NULL,
+    renamed_file BOOLEAN NOT NULL,
+    deleted_file BOOLEAN NOT NULL,
+    diff TEXT NOT NULL,
+    additions INTEGER NOT NULL,
+    deletions INTEGER NOT NULL,
+    commit_id VARCHAR(100) NOT NULL,
+
+    CONSTRAINT diff_pk PRIMARY KEY (id),
+    CONSTRAINT diff_commit_id_fk FOREIGN KEY (commit_id) REFERENCES commits (id)
 );
 
 
 # --- !Downs
 
+DROP TABLE diffs;
 DROP TABLE commits;
 DROP TABLE projects;
