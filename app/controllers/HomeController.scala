@@ -3,6 +3,7 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import infrastructure._
+import infrastructure.gitlab.GitLabService
 import javax.inject._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
@@ -15,7 +16,7 @@ import scala.concurrent.Future
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(http: ServiceHTTP, cc: ControllerComponents)
+class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: ControllerComponents)
   extends AbstractController(cc) with TransformerDTOs {
 
   /**
