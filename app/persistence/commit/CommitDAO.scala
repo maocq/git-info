@@ -20,7 +20,7 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
   import profile.api._
 
 
-  def insertar(commitRecord: CommitRecord): Future[CommitRecord] = {
+  def insert(commitRecord: CommitRecord): Future[CommitRecord] = {
     val insertar = (commitsdb returning commitsdb) += commitRecord
     db.run(insertar)
   }

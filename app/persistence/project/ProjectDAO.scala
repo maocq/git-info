@@ -20,7 +20,7 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
   import profile.api._
 
 
-  def insertar(projectRecord: ProjectRecord): Future[ProjectRecord] = {
+  def insert(projectRecord: ProjectRecord): Future[ProjectRecord] = {
     val insertar = (projectsdb returning projectsdb) += projectRecord
     db.run(insertar)
   }
