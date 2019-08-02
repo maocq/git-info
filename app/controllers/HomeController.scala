@@ -2,11 +2,10 @@ package controllers
 
 import cats.data.EitherT
 import cats.implicits._
-import infraestructura.{CommitDiffGitLabDTO, CommitGitLabDTO, RespuestaHTTP, ServicioHTTP, TransformadorDTOs}
+import infraestructura._
 import javax.inject._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
-import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import scala.concurrent.Future
@@ -16,7 +15,7 @@ import scala.concurrent.Future
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(http: ServicioHTTP, ws: WSClient, cc: ControllerComponents)
+class HomeController @Inject()(http: ServicioHTTP, cc: ControllerComponents)
   extends AbstractController(cc) with TransformadorDTOs {
 
   /**
@@ -43,7 +42,7 @@ class HomeController @Inject()(http: ServicioHTTP, ws: WSClient, cc: ControllerC
   def testFuture: Future[Either[String, Int]] = Future(2.asRight)
 
   def commits: Future[Either[String, RespuestaHTTP[List[CommitGitLabDTO]]]] = {
-    http.get[List[CommitGitLabDTO]]("https://gitlab.seven4n.com/api/v4/projects/580/repository/commits", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
+    http.get[List[CommitGitLabDTO]]("https://gitlab.seven4n.com/api/v4/projects/586/repository/commits?per_page=100", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
       .map(_.leftMap(_.toString))
   }
 
