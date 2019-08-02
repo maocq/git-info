@@ -11,7 +11,7 @@ import scala.concurrent.Future
 
 case class ProjectRecord(
   id: Int, description: String, name: String, nameWithNamespace: String, path: String, pathWithNamespace: String, createdAt: ZonedDateTime, defaultBranch: String,
-  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String, readmeUrl: String
+  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String
 )
 
 class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
@@ -46,9 +46,8 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     def sshUrlToRepo = column[String]("ssh_url_to_repo")
     def httpUrlToRepo = column[String]("http_url_to_repo")
     def webUrl = column[String]("web_url")
-    def readmeUrl = column[String]("readme_url")
 
-    def * = (id, description, name, nameWithNamespace, path, pathWithNamespace, createdAt, defaultBranch, sshUrlToRepo, httpUrlToRepo, webUrl, readmeUrl) <> (ProjectRecord.tupled, ProjectRecord.unapply)
+    def * = (id, description, name, nameWithNamespace, path, pathWithNamespace, createdAt, defaultBranch, sshUrlToRepo, httpUrlToRepo, webUrl) <> (ProjectRecord.tupled, ProjectRecord.unapply)
   }
 
   private val projectsdb = TableQuery[ProjectsRecord]
