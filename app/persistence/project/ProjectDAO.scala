@@ -1,4 +1,4 @@
-package persistencia.project
+package persistence.project
 
 import java.sql.Timestamp
 import java.time.{ZoneOffset, ZonedDateTime}

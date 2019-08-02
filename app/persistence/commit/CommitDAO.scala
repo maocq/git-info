@@ -1,4 +1,4 @@
-package persistencia.commit
+package persistence.commit
 
 import java.sql.Timestamp
 import java.time.{ZoneOffset, ZonedDateTime}
