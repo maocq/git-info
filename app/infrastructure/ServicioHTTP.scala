@@ -10,9 +10,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ServicioHTTP @Inject() (ws: WSClient)(implicit ec: ExecutionContext)  {
 
-  def get[A](url: String)(implicit m: Reads[A]): Future[Either[ErrorHTTP, RespuestaHTTP[A]]] = get(url, Map())
+  def get[A](url: String)(implicit m: Reads[A]): Future[Either[ErrorHTTP, ResponseHTTP[A]]] = get(url, Map())
 
-  def get[A](url: String, headers: Map[String, String])(implicit m: Reads[A]): Future[Either[ErrorHTTP, RespuestaHTTP[A]]] = {
+  def get[A](url: String, headers: Map[String, String])(implicit m: Reads[A]): Future[Either[ErrorHTTP, ResponseHTTP[A]]] = {
 
     ws.url(url)
       .addHttpHeaders(headers.toSeq:_*).get()
@@ -24,10 +24,10 @@ class ServicioHTTP @Inject() (ws: WSClient)(implicit ec: ExecutionContext)  {
         case _ => ErrorHTTP("Error status", respuesta).asLeft
   }
 
-  private def obtenerDTO[A](respuesta: WSResponse)(implicit m: Reads[A]): Either[ErrorHTTP, RespuestaHTTP[A]] = {
+  private def obtenerDTO[A](respuesta: WSResponse)(implicit m: Reads[A]): Either[ErrorHTTP, ResponseHTTP[A]] = {
     respuesta.json.validate[A].fold(
       error => ErrorHTTP("Error Json " + error, respuesta).asLeft,
-      dto => RespuestaHTTP(dto, respuesta).asRight
+      dto => ResponseHTTP(dto, respuesta).asRight
     )
   }
 

@@ -30,7 +30,7 @@ class HomeController @Inject()(http: ServicioHTTP, cc: ControllerComponents)
     (for {
       _ <- EitherT(testTask)
       y <- EitherT(Task.deferFuture(commitsDiff))
-    } yield y.respuesta)
+    } yield y.response)
       .fold(left => left + "=(", right => right)
       .foreach(println(_))
 
@@ -41,12 +41,12 @@ class HomeController @Inject()(http: ServicioHTTP, cc: ControllerComponents)
 
   def testFuture: Future[Either[String, Int]] = Future(2.asRight)
 
-  def commits: Future[Either[String, RespuestaHTTP[List[CommitGitLabDTO]]]] = {
+  def commits: Future[Either[String, ResponseHTTP[List[CommitGitLabDTO]]]] = {
     http.get[List[CommitGitLabDTO]]("https://gitlab.seven4n.com/api/v4/projects/586/repository/commits?per_page=100", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
       .map(_.leftMap(_.toString))
   }
 
-  def commitsDiff: Future[Either[String, RespuestaHTTP[List[CommitDiffGitLabDTO]]]] = {
+  def commitsDiff: Future[Either[String, ResponseHTTP[List[CommitDiffGitLabDTO]]]] = {
     http.get[List[CommitDiffGitLabDTO]](
       "https://gitlab.seven4n.com/api/v4/projects/580/repository/commits/56829dddb4d80b6e51de207e51a5baa1e66edfaf/diff", Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
       .map(_.leftMap(_.toString))
