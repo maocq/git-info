@@ -16,7 +16,7 @@ import scala.concurrent.Future
  */
 @Singleton
 class HomeController @Inject()(http: ServiceHTTP, cc: ControllerComponents)
-  extends AbstractController(cc) with TransformadorDTOs {
+  extends AbstractController(cc) with TransformerDTOs {
 
   /**
    * Create an Action to render an HTML page.
