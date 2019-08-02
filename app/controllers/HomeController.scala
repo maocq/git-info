@@ -2,7 +2,7 @@ package controllers
 
 import cats.data.EitherT
 import cats.implicits._
-import infraestructura._
+import infrastructure._
 import javax.inject._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global

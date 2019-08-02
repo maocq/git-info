@@ -1,4 +1,4 @@
-package infraestructura
+package infrastructure
 
 import cats.implicits._
 import javax.inject.Inject
