@@ -27,6 +27,11 @@ class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: Con
    * a path of `/`.
    */
   def index() = Action { implicit request: Request[AnyContent] =>
+
+    gitLab.getAllCommits(580).foreach(all =>{
+      println(all)
+    })
+
     /*
     for {
       x <- EitherT(gitLab.getProject(580))
@@ -37,12 +42,14 @@ class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: Con
     }
      */
 
+    /*
     (for {
       _ <- EitherT(testTask)
       y <- EitherT(Task.deferFuture(gitLab.getProject(580)))
     } yield y.response)
       .fold(left => left + "=(", right => right)
       .foreach(println(_))
+     */
 
     Ok(views.html.index())
   }
