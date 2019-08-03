@@ -9,14 +9,14 @@ import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
 import play.api.mvc._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: ControllerComponents)
+class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOs {
 
   /**
@@ -28,19 +28,15 @@ class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: Con
    */
   def index() = Action { implicit request: Request[AnyContent] =>
 
-    gitLab.getAllCommits(580).foreach(all =>{
-      println(all)
-    })
+    val projectId = 586
 
-    /*
     for {
-      x <- EitherT(gitLab.getProject(580))
-      y <- EitherT(gitLab.getCommits(580))
-      z <- EitherT(gitLab.getCommitsDiff(580, "56829dddb4d80b6e51de207e51a5baa1e66edfaf"))
+      x <- EitherT(gitLab.getProject(projectId))
+      y <- EitherT(gitLab.getAllCommits(projectId))
+      z <- EitherT(traverseFold(y)( commit => gitLab.getCommitsDiff(projectId, commit.id)))
     } yield {
       (x, y, z)
     }
-     */
 
     /*
     (for {
@@ -52,6 +48,16 @@ class HomeController @Inject()(gitLab: GitLabService, http: ServiceHTTP, cc: Con
      */
 
     Ok(views.html.index())
+  }
+
+  def traverseFold[L, R, T](elements: List[T])(f: T => Future[Either[L, R]]): Future[Either[L, List[R]]] = {
+    elements.foldLeft( EitherT(Future.successful(List.empty[R].asRight[L])) ) {
+      (acc, nxt) => acc.flatMap(list => EitherT(f(nxt)).map(as => as:: list))
+    }.value
+  }
+
+  def sequence[L, R](eithers: List[Either[L, R]]): Either[L, List[R]] = {
+    eithers.foldRight(List.empty[R].asRight[L])( (elem, acc) => acc.flatMap(lista => elem.map(_ :: lista)) )
   }
 
   def testTask: Task[Either[String, Int]] = Task(1.asRight)
