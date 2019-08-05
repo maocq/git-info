@@ -65,7 +65,6 @@ class HomeController @Inject()(projectDAO: ProjectDAO, commitDAO: CommitDAO, dif
     val records = commits.map(c => CommitRecord(c.id, c.short_id, c.created_at, c.parent_ids.toString(), c.title, c.message, c.author_name,
       c.author_email, c.authored_date, c.committer_name, c.committer_email, c.committed_date, projectId))
     commitDAO.insertAll(records).map(_.asRight)
-    //Future.traverse(records)(record => commitDAO.insert(record)).map(_.asRight)
   }
 
   def insertarDiffs(diffs: List[(String, List[CommitDiffGitLabDTO])]): Future[Either[String, List[DiffRecord]]] = {
@@ -75,7 +74,7 @@ class HomeController @Inject()(projectDAO: ProjectDAO, commitDAO: CommitDAO, dif
       val del = d.diff.split("\\n").filter(_.startsWith("-")).size
       DiffRecord(0, d.old_path, d.new_path, d.a_mode, d.b_mode, d.new_file, d.renamed_file, d.deleted_file, d.diff, add, del, list._1)
     }))
-    Future.traverse(records)(record => diffDAO.insert(record)).map(_.asRight)
+    diffDAO.insertAll(records).map(_.asRight)
   }
 
   def traverseFold[L, R, T](elements: List[T])(f: T => Future[Either[L, R]]): Future[Either[L, List[R]]] = {

@@ -30,7 +30,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
     getCommits(id, page).flatMap {
       case l @ Left(_) => Future.successful(l)
       case Right(x) => getNextPage(x) match {
-        case 0 => Future.successful(x.copy(response = lista ::: x.response).asRight)
+        case 0 => Future.successful(x.copy(response = (lista ::: x.response).reverse).asRight)
         case n => getAllCommits(id, n, lista ::: x.response)
       }
     }
