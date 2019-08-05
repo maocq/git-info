@@ -19,13 +19,16 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
 
   import profile.api._
 
-
   def insert(commitRecord: CommitRecord): Future[CommitRecord] = {
     val insertar = (commitsdb returning commitsdb) += commitRecord
     db.run(insertar)
   }
 
-
+  def insertAll(commitsRecord: List[CommitRecord]): Future[List[CommitRecord]] = {
+    val inserts = DBIO.sequence(commitsRecord.map(c => (commitsdb returning commitsdb) += c))
+      .transactionally
+    db.run(inserts)
+  }
 
 
   implicit val JavaZonedDateTimeMapper = MappedColumnType.base[ZonedDateTime, Timestamp](
