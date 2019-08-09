@@ -1,8 +1,11 @@
 package infrastructure.gitlab
 
 import cats.implicits._
+import domain.model.GError
+import domain.model.GError.DomainError
 import infrastructure._
 import javax.inject.Inject
+import monix.eval.Task
 import play.api.mvc.ControllerComponents
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -11,20 +14,22 @@ import scala.util.Try
 class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
                             (implicit ec: ExecutionContext) extends TransformerDTOs {
 
-  def getProject(projectId: Int): Future[Either[String, ProjectGitLabDTO]] = {
+  def getProject(projectId: Int): Task[Either[GError, ProjectGitLabDTO]] = Task.deferFuture {
     http.get[ProjectGitLabDTO](s"https://gitlab.seven4n.com/api/v4/projects/$projectId",
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
-      .map(_.bimap(_.toString, _.response))
-  }
+  }.map(_.bimap(l => DomainError(l.error, "11001"), _.response))
 
-  def getAllCommits(id: Int): Future[Either[String, List[CommitGitLabDTO]]] = getAllCommits(id, 1, Nil).map(_.bimap(_.toString, _.response))
 
-  def getCommitsDiff(projectId: Int, commit: String): Future[Either[String, (String, List[CommitDiffGitLabDTO])]] = {
+  def getAllCommits(id: Int): Task[Either[GError, List[CommitGitLabDTO]]] = Task.deferFuture {
+    getAllCommits(id, 1, Nil)
+  }.map(_.bimap(l => DomainError(l.error, "11002"), _.response))
+
+
+  def getCommitsDiff(projectId: Int, commit: String): Task[Either[GError, (String, List[CommitDiffGitLabDTO])]] = Task.deferFuture {
     http.get[List[CommitDiffGitLabDTO]](
       s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits/$commit/diff",
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
-      .map(_.bimap(left => left.toString, right => (commit, right.response)))
-  }
+  }.map(_.bimap(l => DomainError(l.error, "11001"), right => (commit, right.response)))
 
   private def getAllCommits(id: Int, page: Int, lista: List[CommitGitLabDTO]): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] ={
     getCommits(id, page).flatMap {

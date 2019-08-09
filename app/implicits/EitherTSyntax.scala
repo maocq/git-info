@@ -3,7 +3,7 @@ package implicits
 import cats.data.EitherT
 
 trait EitherTSyntax {
-  implicit final def implicitEitherTFuture[F[_], A, B](value: F[Either[A, B]]): EitherTWrapper[F, A, B] = new EitherTWrapper(value)
+  implicit final def implicitEitherT[F[_], A, B](value: F[Either[A, B]]): EitherTWrapper[F, A, B] = new EitherTWrapper(value)
 }
 
 final class EitherTWrapper[F[_], A, B](value: F[Either[A, B]]) {
