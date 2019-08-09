@@ -2,6 +2,7 @@ package controllers
 
 import cats.data.EitherT
 import cats.implicits._
+import implicits.implicits._
 import infrastructure._
 import infrastructure.gitlab.GitLabService
 import javax.inject._
@@ -34,12 +35,12 @@ class HomeController @Inject()(projectDAO: ProjectDAO, commitDAO: CommitDAO, dif
     val projectId = 586
 
     for {
-      x <- EitherT(gitLab.getProject(projectId))
-      y <- EitherT(gitLab.getAllCommits(projectId))
-      z <- EitherT(traverseFold(y)( commit => gitLab.getCommitsDiff(projectId, commit.id)))
-      a <- EitherT(insertarProject(x))
-      b <- EitherT(insertarCommits(y, a.id))
-      c <- EitherT(insertarDiffs(z))
+      x <- gitLab.getProject(projectId).toEitherT
+      y <- gitLab.getAllCommits(projectId).toEitherT
+      z <- traverseFold(y)( commit => gitLab.getCommitsDiff(projectId, commit.id)).toEitherT
+      a <- insertarProject(x).toEitherT
+      b <- insertarCommits(y, a.id).toEitherT
+      c <- insertarDiffs(z).toEitherT
     } yield {
       (x, y, z)
     }
@@ -70,8 +71,8 @@ class HomeController @Inject()(projectDAO: ProjectDAO, commitDAO: CommitDAO, dif
   def insertarDiffs(diffs: List[(String, List[CommitDiffGitLabDTO])]): Future[Either[String, List[DiffRecord]]] = {
 
     val records = diffs.flatMap(list => list._2.map(d => {
-      val add = d.diff.split("\\n").filter(_.startsWith("+")).size
-      val del = d.diff.split("\\n").filter(_.startsWith("-")).size
+      val add = d.diff.split("\\n").count(_.startsWith("+"))
+      val del = d.diff.split("\\n").count(_.startsWith("-"))
       DiffRecord(0, d.old_path, d.new_path, d.a_mode, d.b_mode, d.new_file, d.renamed_file, d.deleted_file, d.diff, add, del, list._1)
     }))
     diffDAO.insertAll(records).map(_.asRight)
