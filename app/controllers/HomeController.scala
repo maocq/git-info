@@ -2,6 +2,7 @@ package controllers
 
 import cats.data.EitherT
 import cats.implicits._
+import domain.repositories.ProjectRepository
 import implicits.implicits._
 import infrastructure._
 import infrastructure.gitlab.GitLabService
@@ -20,7 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(projectDAO: ProjectDAO, commitDAO: CommitDAO, diffDAO: DiffDAO, gitLab: GitLabService, http: ServiceHTTP, cc: ControllerComponents)(implicit ec: ExecutionContext)
+class HomeController @Inject()(pr: ProjectRepository, projectDAO: ProjectDAO, commitDAO: CommitDAO, diffDAO: DiffDAO, gitLab: GitLabService, http: ServiceHTTP, cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOs {
 
   /**
@@ -33,7 +34,9 @@ class HomeController @Inject()(projectDAO: ProjectDAO, commitDAO: CommitDAO, dif
   def index() = Action { implicit request: Request[AnyContent] =>
 
     val projectId = 586
-
+    pr.findByID(projectId)
+        .foreach(e => println(e))
+  /*
     for {
       x <- gitLab.getProject(projectId).toEitherT
       y <- gitLab.getAllCommits(projectId).toEitherT
@@ -44,6 +47,7 @@ class HomeController @Inject()(projectDAO: ProjectDAO, commitDAO: CommitDAO, dif
     } yield {
       (x, y, z)
     }
+   */
 
     /*
     (for {
@@ -71,8 +75,8 @@ class HomeController @Inject()(projectDAO: ProjectDAO, commitDAO: CommitDAO, dif
   def insertarDiffs(diffs: List[(String, List[CommitDiffGitLabDTO])]): Future[Either[String, List[DiffRecord]]] = {
 
     val records = diffs.flatMap(list => list._2.map(d => {
-      val add = d.diff.split("\\n").count(_.startsWith("+"))
-      val del = d.diff.split("\\n").count(_.startsWith("-"))
+      val add = d.diff.split("\\n").filter(_.startsWith("+")).size
+      val del = d.diff.split("\\n").filter(_.startsWith("-")).size
       DiffRecord(0, d.old_path, d.new_path, d.a_mode, d.b_mode, d.new_file, d.renamed_file, d.deleted_file, d.diff, add, del, list._1)
     }))
     diffDAO.insertAll(records).map(_.asRight)

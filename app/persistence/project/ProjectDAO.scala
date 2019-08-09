@@ -19,10 +19,12 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
 
   import profile.api._
 
+  def findByID(id: Int): Future[Option[ProjectRecord]] = db.run {
+    projectsdb.filter(_.id === id).result.headOption
+  }
 
-  def insert(projectRecord: ProjectRecord): Future[ProjectRecord] = {
-    val insertar = (projectsdb returning projectsdb) += projectRecord
-    db.run(insertar)
+  def insert(projectRecord: ProjectRecord): Future[ProjectRecord] = db.run {
+    (projectsdb returning projectsdb) += projectRecord
   }
 
 
