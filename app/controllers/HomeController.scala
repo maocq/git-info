@@ -3,6 +3,7 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import domain.repositories.ProjectRepository
+import domain.services.ProjectService
 import implicits.implicits._
 import infrastructure._
 import infrastructure.gitlab.GitLabService
@@ -21,7 +22,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(pr: ProjectRepository, projectDAO: ProjectDAO, commitDAO: CommitDAO, diffDAO: DiffDAO, gitLab: GitLabService, http: ServiceHTTP, cc: ControllerComponents)(implicit ec: ExecutionContext)
+class HomeController @Inject()(projectService: ProjectService, pr: ProjectRepository, projectDAO: ProjectDAO, commitDAO: CommitDAO, diffDAO: DiffDAO, gitLab: GitLabService, http: ServiceHTTP, cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOs {
 
   /**
@@ -33,9 +34,12 @@ class HomeController @Inject()(pr: ProjectRepository, projectDAO: ProjectDAO, co
    */
   def index() = Action { implicit request: Request[AnyContent] =>
 
-    val projectId = 586
-    pr.findByID(projectId)
-        .foreach(e => println(e))
+    val projectId = 1080
+    projectService.register(projectId)
+      .fold(left => left.toString, right => right.toString)
+      .foreach(println(_))
+
+
   /*
     for {
       x <- gitLab.getProject(projectId).toEitherT
@@ -48,15 +52,6 @@ class HomeController @Inject()(pr: ProjectRepository, projectDAO: ProjectDAO, co
       (x, y, z)
     }
    */
-
-    /*
-    (for {
-      _ <- EitherT(testTask)
-      y <- EitherT(Task.deferFuture(gitLab.getProject(580)))
-    } yield y.response)
-      .fold(left => left + "=(", right => right)
-      .foreach(println(_))
-     */
 
     Ok(views.html.index())
   }

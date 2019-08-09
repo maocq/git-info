@@ -16,3 +16,5 @@
         12000 QueryError
             12100 Not exist
                 12101 Project no encontrado
+            12200 Already exist
+                12201 Project exist

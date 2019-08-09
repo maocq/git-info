@@ -17,7 +17,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
   def getProject(projectId: Int): Task[Either[GError, ProjectGitLabDTO]] = Task.deferFuture {
     http.get[ProjectGitLabDTO](s"https://gitlab.seven4n.com/api/v4/projects/$projectId",
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
-  }.map(_.bimap(l => DomainError(l.error, "11001"), _.response))
+  }.map(_.bimap(l => DomainError(s"Project not exist - ${l.error}", "11001"), _.response))
 
 
   def getAllCommits(id: Int): Task[Either[GError, List[CommitGitLabDTO]]] = Task.deferFuture {
