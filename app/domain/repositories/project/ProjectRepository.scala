@@ -1,11 +1,11 @@
-package domain.repositories
+package domain.repositories.project
 
 import cats.implicits._
 import domain.model.GError.DomainError
 import domain.model.{GError, Project}
 import javax.inject.Inject
 import monix.eval.Task
-import persistence.project.{ProjectDAO, ProjectRecord}
+import persistence.project.ProjectDAO
 
 class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter {
 

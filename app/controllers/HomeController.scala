@@ -2,7 +2,7 @@ package controllers
 
 import cats.data.EitherT
 import cats.implicits._
-import domain.repositories.ProjectRepository
+import domain.repositories.project.ProjectRepository
 import domain.services.ProjectService
 import implicits.implicits._
 import infrastructure._

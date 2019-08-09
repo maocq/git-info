@@ -1,4 +1,4 @@
-package domain.repositories
+package domain.repositories.project
 
 import domain.model.Project
 import persistence.project.ProjectRecord

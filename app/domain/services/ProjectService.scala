@@ -4,7 +4,7 @@ import cats.data.EitherT
 import cats.implicits._
 import domain.model.GError.DomainError
 import domain.model.{GError, Project}
-import domain.repositories.ProjectRepository
+import domain.repositories.project.ProjectRepository
 import implicits.implicits._
 import infrastructure.{CommitGitLabDTO, ProjectGitLabDTO}
 import infrastructure.gitlab.GitLabService
