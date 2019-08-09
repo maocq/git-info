@@ -1,5 +1,7 @@
 package domain.repositories.commit
 
+import java.time.ZonedDateTime
+
 import domain.model.Commit
 import javax.inject.Inject
 import monix.eval.Task
@@ -14,5 +16,9 @@ class CommitRepository @Inject()(commitDAO: CommitDAO) extends CommitAdapter {
   def getExistingId(commits: List[Commit]): Task[List[Commit]] = Task.deferFuture {
     commitDAO.getExistingId(commits.map(_.id))
   }.map(_.map(transform).toList)
+
+  def getLastDateCommit(): Task[Option[ZonedDateTime]] = Task.deferFuture  {
+    commitDAO.getLastDateCommit()
+  }
 
 }

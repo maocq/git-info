@@ -32,6 +32,11 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
     commitsdb.filter(as => as.id.inSet( ids)).result
   }
 
+  def getLastDateCommit(): Future[Option[ZonedDateTime]] = db.run {
+    commitsdb.sortBy(_.committedDate.desc).map(_.committedDate).take(1).result.headOption
+  }
+
+
 
   implicit val JavaZonedDateTimeMapper = MappedColumnType.base[ZonedDateTime, Timestamp](
     l => Timestamp.from(l.toInstant),

@@ -25,7 +25,8 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
 
     def registerCommits(proyectId: Int) = {
         for {
-          x <- gitLab.getAllCommits(proyectId).toEitherT
+          a <- commitRepository.getLastDateCommit().map(_.asRight[GError]).toEitherT
+          x <- gitLab.getAllCommits(proyectId, a).toEitherT
           c <- transformCommits(x, proyectId)
           f <- filterCommits(c).map(_.asRight[GError]).toEitherT
           z <- commitRepository.insertAll(f).map(_.asRight[GError]).toEitherT

@@ -1,5 +1,7 @@
 package infrastructure.gitlab
 
+import java.time.ZonedDateTime
+
 import cats.implicits._
 import domain.model.GError
 import domain.model.GError.DomainError
@@ -20,8 +22,8 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
   }.map(_.bimap(l => DomainError(s"Project not exist - ${l.error}", "11001"), _.response))
 
 
-  def getAllCommits(id: Int): Task[Either[GError, List[CommitGitLabDTO]]] = Task.deferFuture {
-    getAllCommits(id, 1, Nil)
+  def getAllCommits(id: Int, date: Option[ZonedDateTime]): Task[Either[GError, List[CommitGitLabDTO]]] = Task.deferFuture {
+    getAllCommits(id, 1, Nil, date)
   }.map(_.bimap(l => DomainError(l.error, "11002"), _.response))
 
 
@@ -31,18 +33,18 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
   }.map(_.bimap(l => DomainError(l.error, "11001"), right => (commit, right.response)))
 
-  private def getAllCommits(id: Int, page: Int, lista: List[CommitGitLabDTO]): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] ={
-    getCommits(id, page).flatMap {
+  private def getAllCommits(id: Int, page: Int, lista: List[CommitGitLabDTO], date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] ={
+    getCommits(id, page, date).flatMap {
       case l @ Left(_) => Future.successful(l)
       case Right(x) => getNextPage(x) match {
         case 0 => Future.successful(x.copy(response = (lista ::: x.response).reverse).asRight)
-        case n => getAllCommits(id, n, lista ::: x.response)
+        case n => getAllCommits(id, n, lista ::: x.response, date)
       }
     }
   }
 
-  private def getCommits(projectId: Int, page: Int): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] = {
-    http.get[List[CommitGitLabDTO]](s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits?page=$page&per_page=100&since=2010-07-15T00:00:00Z",
+  private def getCommits(projectId: Int, page: Int, date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] = {
+    http.get[List[CommitGitLabDTO]](s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits?page=$page&per_page=100&since=${date.getOrElse("")}",
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
   }
 
