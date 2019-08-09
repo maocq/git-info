@@ -34,11 +34,17 @@ class HomeController @Inject()(projectService: ProjectService, pr: ProjectReposi
    */
   def index() = Action { implicit request: Request[AnyContent] =>
 
-    val projectId = 1080
+    val projectId = 586
+    /*
     projectService.register(projectId)
       .fold(left => left.toString, right => right.toString)
       .foreach(println(_))
+     */
 
+    projectService.registerCommits(projectId)
+      .fold(left => left.toString, right => right.toString)
+      .recover{case err => err.getMessage}
+      .foreach(println(_))
 
   /*
     for {

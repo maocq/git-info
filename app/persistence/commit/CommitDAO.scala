@@ -19,15 +19,17 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
 
   import profile.api._
 
-  def insert(commitRecord: CommitRecord): Future[CommitRecord] = {
-    val insertar = (commitsdb returning commitsdb) += commitRecord
-    db.run(insertar)
+  def insert(commitRecord: CommitRecord): Future[CommitRecord] = db.run {
+    (commitsdb returning commitsdb) += commitRecord
   }
 
-  def insertAll(commitsRecord: List[CommitRecord]): Future[List[CommitRecord]] = {
-    val inserts = DBIO.sequence(commitsRecord.map(c => (commitsdb returning commitsdb) += c))
+  def insertAll(commitsRecord: List[CommitRecord]): Future[List[CommitRecord]] = db.run {
+    DBIO.sequence(commitsRecord.map(c => (commitsdb returning commitsdb) += c))
       .transactionally
-    db.run(inserts)
+  }
+
+  def getExistingId(ids: List[String]): Future[Seq[CommitRecord]] = db.run {
+    commitsdb.filter(as => as.id.inSet( ids)).result
   }
 
 
