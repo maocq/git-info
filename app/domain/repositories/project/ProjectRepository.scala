@@ -19,7 +19,7 @@ class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter
 
     def insertEither(project: Project): Task[Either[GError, Project]] = insert(project).map(_.asRight[GError])
 
-    def findByIDEither(id: Int): Task[Either[DomainError, Project]] = {
+    def findByIDEither(id: Int): Task[Either[GError, Project]] = {
         findByID(id).map(ee => ee.toRight(DomainError("Project not found", "12101")))
     }
 

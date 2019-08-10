@@ -8,14 +8,14 @@ import persistence.diff.{DiffDAO, DiffRecord}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class CommitRecord(
   id: String, shortId: String, createdAt: ZonedDateTime, parentIds: String, title: String, message: String, authorName: String,
   authorEmail: String, authoredDate: ZonedDateTime, committerName: String, committerEmail: String, committedDate: ZonedDateTime, projectId: Int
 )
 
-class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, diffDAO: DiffDAO)
+class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -32,18 +32,19 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
     insertAllDBIO(commitsRecord).transactionally
   }
 
-  def insertInfoCommits(commitsRecord: List[CommitRecord], diffsRecord: List[DiffRecord]) = db.run {
-    (insertAllDBIO(commitsRecord)
-      andThen diffDAO.insertAllDBIO(diffsRecord)
-      ).transactionally
+  def insertInfoCommits(commitsRecord: List[CommitRecord], diffsRecord: List[DiffRecord]): Future[(List[CommitRecord], List[DiffRecord])] = db.run {
+    (for {
+      x <- insertAllDBIO(commitsRecord)
+      y <- diffDAO.insertAllDBIO(diffsRecord)
+    } yield (x, y)).transactionally
   }
 
   def getExistingId(ids: List[String]): Future[Seq[CommitRecord]] = db.run {
     commitsdb.filter(as => as.id.inSet( ids)).result
   }
 
-  def getLastDateCommit(): Future[Option[ZonedDateTime]] = db.run {
-    commitsdb.sortBy(_.committedDate.desc).map(_.committedDate).take(1).result.headOption
+  def getLastDateCommit(projectId: Int): Future[Option[ZonedDateTime]] = db.run {
+    commitsdb.filter(_.projectId === projectId).sortBy(_.committedDate.desc).map(_.committedDate).take(1).result.headOption
   }
 
 

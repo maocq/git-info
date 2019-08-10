@@ -18,15 +18,16 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
       for {
         d <- gitLab.getProject(proyectId).toEitherT
         p <- transformProject(d)
-        _ <- validateExistProject(p).toEitherT
+        _ <- validateNotExistProject(p).toEitherT
         z <- projectRepositoy.insertEither(p).toEitherT
       } yield z
     }
 
-    def registerCommits(projectId: Int): EitherT[Task, GError, List[Diff]] = {
+    def registerCommits(projectId: Int): EitherT[Task, GError, (List[Commit], List[Diff])] = {
 
         for {
-          a <- commitRepository.getLastDateCommit().map(_.asRight[GError]).toEitherT
+          pr <- projectRepositoy.findByIDEither(projectId)
+          a <- commitRepository.getLastDateCommit(projectId).map(_.asRight[GError]).toEitherT
           x <- gitLab.getAllCommits(projectId, a).toEitherT
           c <- transformCommits(x, projectId)
           f <- filterCommits(c).map(_.asRight[GError]).toEitherT
@@ -38,7 +39,7 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
 
     }
 
-    private def validateExistProject(project: Project): Task[Either[GError, Project]] = {
+    private def validateNotExistProject(project: Project): Task[Either[GError, Project]] = {
       projectRepositoy.findByID(project.id)
         .map(opt => Either.cond( opt.isEmpty, project, DomainError("Project exist", "12201") ))
     }
