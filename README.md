@@ -18,3 +18,8 @@
                 12101 Project no encontrado
             12200 Already exist
                 12201 Project exist
+
+
+    20000 ValidationError
+
+    30000 TechnicalError
