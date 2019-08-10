@@ -1,16 +1,17 @@
 package domain.commands
 
+import domain.model.TransformerDomain
 import domain.services.ProjectService
-import infrastructure.TransformerDTOs
+import infrastructure.Test
 import javax.inject.Inject
 import monix.eval.Task
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 
-class TestCommand @Inject()(projectService: ProjectService) extends Command with TransformerDTOs {
+class TestCommand @Inject()(projectService: ProjectService) extends Command[Test] with TransformerDomain {
 
-  def execute(jsValue: JsValue): Task[Consequence] = {
-    val projectId = 580
+  def execute(value: Test): Task[Consequence] = {
 
+    val projectId = value.count
     projectService.register(projectId)
       .fold(leftConsequence, r => rightConsequence(Json.toJson(r)))
   }

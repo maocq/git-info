@@ -6,9 +6,9 @@ import monix.eval.Task
 import play.api.libs.json.JsValue
 
 
-trait Command  {
+trait Command[T]  {
 
-  def execute(jsValue:  JsValue) : Task[Consequence]
+  def execute(value:  T) : Task[Consequence]
 
   protected def leftConsequence(error: GError): Consequence = Consequence(error.asLeft)
   protected def rightConsequence(json: JsValue): Consequence = Consequence(json.asRight)

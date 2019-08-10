@@ -15,9 +15,9 @@ import monix.eval.Task
 class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitRepository: CommitRepository, gitLab: GitLabService) {
 
   def register(proyectId: Int): EitherT[Task, GError, Project] = for {
+      _ <- validateNotExistProject(proyectId).toEitherT
       d <- gitLab.getProject(proyectId).toEitherT
       p <- transformProject(d)
-      _ <- validateNotExistProject(p).toEitherT
       r <- projectRepositoy.insertEither(p).toEitherT
     } yield r
 
@@ -33,10 +33,11 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
     } yield r
 
 
-  private def validateNotExistProject(project: Project): Task[Either[GError, Project]] = {
-    projectRepositoy.findByID(project.id)
-      .map(opt => Either.cond(opt.isEmpty, project, DomainError("Project exist", "12201")))
+  private def validateNotExistProject(projectId: Int): Task[Either[GError, Int]] = {
+    projectRepositoy.findByID(projectId)
+      .map(opt => Either.cond(opt.isEmpty, projectId, DomainError("Project exist", "12201")))
   }
+
   private def filterCommits(commits: List[Commit]): Task[List[Commit]] = {
     def filterCommits(commits: List[Commit], commitsAlready: List[Commit]): List[Commit] = {
       val idsAlready = commitsAlready.map(_.id)
