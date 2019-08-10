@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.time.{ZoneOffset, ZonedDateTime}
 
 import javax.inject.Inject
+import persistence.diff.{DiffDAO, DiffRecord}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -14,7 +15,7 @@ case class CommitRecord(
   authorEmail: String, authoredDate: ZonedDateTime, committerName: String, committerEmail: String, committedDate: ZonedDateTime, projectId: Int
 )
 
-class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
+class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, diffDAO: DiffDAO)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -23,9 +24,18 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
     (commitsdb returning commitsdb) += commitRecord
   }
 
-  def insertAll(commitsRecord: List[CommitRecord]): Future[List[CommitRecord]] = db.run {
+  def insertAllDBIO(commitsRecord: List[CommitRecord]): DBIO[List[CommitRecord]] = {
     DBIO.sequence(commitsRecord.map(c => (commitsdb returning commitsdb) += c))
-      .transactionally
+  }
+
+  def insertAll(commitsRecord: List[CommitRecord]): Future[List[CommitRecord]] = db.run {
+    insertAllDBIO(commitsRecord).transactionally
+  }
+
+  def insertInfoCommits(commitsRecord: List[CommitRecord], diffsRecord: List[DiffRecord]) = db.run {
+    (insertAllDBIO(commitsRecord)
+      andThen diffDAO.insertAllDBIO(diffsRecord)
+      ).transactionally
   }
 
   def getExistingId(ids: List[String]): Future[Seq[CommitRecord]] = db.run {

@@ -29,7 +29,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
 
   def getCommitsDiff(projectId: Int, commit: String): Task[Either[GError, (String, List[CommitDiffGitLabDTO])]] = Task.deferFuture {
     http.get[List[CommitDiffGitLabDTO]](
-      s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits/$commit/diff",
+      s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits/$commit/diff?per_page=500",
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
   }.map(_.bimap(l => DomainError(l.error, "11001"), right => (commit, right.response)))
 

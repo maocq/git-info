@@ -20,15 +20,17 @@ class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   import profile.api._
 
 
-  def insert(diffRecord: DiffRecord): Future[DiffRecord] = {
-    val insertar = (diffsdb returning diffsdb) += diffRecord
-    db.run(insertar)
+  def insert(diffRecord: DiffRecord): Future[DiffRecord] = db.run {
+    (diffsdb returning diffsdb) += diffRecord
   }
 
-  def insertAll(diffsRecord: List[DiffRecord]): Future[List[DiffRecord]] = {
-    val inserts = DBIO.sequence(diffsRecord.map(c => (diffsdb returning diffsdb) += c))
+  def insertAllDBIO(diffsRecord: List[DiffRecord]): DBIO[List[DiffRecord]] =  {
+    DBIO.sequence(diffsRecord.map(c => (diffsdb returning diffsdb) += c))
+  }
+
+  def insertAll(diffsRecord: List[DiffRecord]): Future[List[DiffRecord]] = db.run {
+    insertAllDBIO(diffsRecord)
       .transactionally
-    db.run(inserts)
   }
 
 

@@ -38,8 +38,9 @@ class HomeController @Inject()(projectService: ProjectService, pr: ProjectReposi
     /*
     projectService.register(projectId)
       .fold(left => left.toString, right => right.toString)
+      .recover{case err => err.getMessage}
       .foreach(println(_))
-     */
+    */
 
     projectService.registerCommits(projectId)
       .fold(left => left.toString, right => right.toString)

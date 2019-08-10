@@ -11,3 +11,8 @@ case class Commit(
   id: String, shortId: String, createdAt: ZonedDateTime, parentIds: String, title: String, message: String, authorName: String,
   authorEmail: String, authoredDate: ZonedDateTime, committerName: String, committerEmail: String, committedDate: ZonedDateTime, projectId: Int
 )
+
+case class Diff(
+  id: Int, oldPath: String, newPath: String, aMode: String, bMode: String, newFile: Boolean,
+  renamedFile: Boolean, deletedFile: Boolean, diff: String, additions: Int, deletions: Int, commitId: String
+)
