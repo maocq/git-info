@@ -4,7 +4,6 @@ import cats.data.EitherT
 import cats.implicits._
 import domain.services.ProjectService
 import javax.inject._
-import monix.execution.Scheduler.Implicits.global
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,14 +13,6 @@ class HomeController @Inject()(projectService: ProjectService, cc: ControllerCom
   extends AbstractController(cc) {
 
   def index() = Action { implicit request: Request[AnyContent] =>
-
-    val projectId = 586
-    projectService.register(projectId)
-      .fold(left => left.toString, right => right.toString)
-      .recover{case err => err.getMessage}
-      .foreach(println(_))
-
-
     Ok(views.html.index())
   }
 

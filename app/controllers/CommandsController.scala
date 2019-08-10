@@ -3,13 +3,14 @@ package controllers
 import domain.commands.Command
 import domain.model.GError
 import domain.model.GError.{DomainError, TechnicalError, ValidationError}
+import monix.execution.Scheduler.Implicits.global
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AbstractController, ControllerComponents, Result}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-class CommandsController(cc: ControllerComponents)(implicit ec: ExecutionContext)
+class CommandsController(cc: ControllerComponents)
   extends AbstractController(cc) with ErrorsTransformer {
 
   val logger: Logger = Logger(this.getClass)
@@ -17,7 +18,7 @@ class CommandsController(cc: ControllerComponents)(implicit ec: ExecutionContext
   def ejecutar(command: Command, jsValue: JsValue): Future[Result] = {
     logger.info(s"Command ${command.getClass.getName} Json: $jsValue")
 
-    command.execute(jsValue).map(consequence =>
+    command.execute(jsValue).runToFuture.map(consequence =>
       consequence.response.fold(handleError, handleResponse)
     ) recover { case error =>
       logger.error(s"Internal server error ${error.getMessage}", error)

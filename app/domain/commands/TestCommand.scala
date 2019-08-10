@@ -1,14 +1,17 @@
 package domain.commands
 
-import cats.implicits._
-import domain.model.GError.TechnicalError
-import play.api.libs.json.JsValue
+import domain.services.ProjectService
+import infrastructure.TransformerDTOs
+import javax.inject.Inject
+import monix.eval.Task
+import play.api.libs.json.{JsValue, Json}
 
-import scala.concurrent.Future
+class TestCommand @Inject()(projectService: ProjectService) extends Command with TransformerDTOs {
 
-class TestCommand extends Command {
+  def execute(jsValue: JsValue): Task[Consequence] = {
+    val projectId = 580
 
-  def execute(jsValue: JsValue): Future[Consequence] = {
-    Future.successful(Consequence(TechnicalError("=(", "0").asLeft))
+    projectService.register(projectId)
+      .fold(leftConsequence, r => rightConsequence(Json.toJson(r)))
   }
 }
