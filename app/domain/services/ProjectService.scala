@@ -7,51 +7,43 @@ import domain.model.{Commit, Diff, GError, Project}
 import domain.repositories.commit.CommitRepository
 import domain.repositories.project.ProjectRepository
 import implicits.implicits._
-import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, ProjectGitLabDTO}
 import infrastructure.gitlab.GitLabService
+import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, ProjectGitLabDTO}
 import javax.inject.Inject
 import monix.eval.Task
 
 class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitRepository: CommitRepository, gitLab: GitLabService) {
 
-    def register(proyectId: Int): EitherT[Task, GError, Project] = {
-      for {
-        d <- gitLab.getProject(proyectId).toEitherT
-        p <- transformProject(d)
-        _ <- validateNotExistProject(p).toEitherT
-        z <- projectRepositoy.insertEither(p).toEitherT
-      } yield z
-    }
+  def register(proyectId: Int): EitherT[Task, GError, Project] = for {
+      d <- gitLab.getProject(proyectId).toEitherT
+      p <- transformProject(d)
+      _ <- validateNotExistProject(p).toEitherT
+      r <- projectRepositoy.insertEither(p).toEitherT
+    } yield r
 
-    def registerCommits(projectId: Int): EitherT[Task, GError, (List[Commit], List[Diff])] = {
-
-        for {
-          pr <- projectRepositoy.findByIDEither(projectId)
-          a <- commitRepository.getLastDateCommit(projectId).map(_.asRight[GError]).toEitherT
-          x <- gitLab.getAllCommits(projectId, a).toEitherT
-          c <- transformCommits(x, projectId)
-          f <- filterCommits(c).map(_.asRight[GError]).toEitherT
-          j <- traverseFold(f)( commit => gitLab.getCommitsDiff(projectId, commit.id))
-          d <- transformDiffs(j)
-          z <- commitRepository.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
-        } yield z
+  def registerCommits(projectId: Int): EitherT[Task, GError, (List[Commit], List[Diff])] = for {
+      _ <- projectRepositoy.findByIDEither(projectId).toEitherT
+      l <- commitRepository.getLastDateCommit(projectId).map(_.asRight[GError]).toEitherT
+      a <- gitLab.getAllCommits(projectId, l).toEitherT
+      c <- transformCommits(a, projectId)
+      f <- filterCommits(c).map(_.asRight[GError]).toEitherT
+      t <- traverseFold(f)(commit => gitLab.getCommitsDiff(projectId, commit.id))
+      d <- transformDiffs(t)
+      r <- commitRepository.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
+    } yield r
 
 
-    }
-
-    private def validateNotExistProject(project: Project): Task[Either[GError, Project]] = {
-      projectRepositoy.findByID(project.id)
-        .map(opt => Either.cond( opt.isEmpty, project, DomainError("Project exist", "12201") ))
-    }
-
-    private def filterCommits(commits: List[Commit]): Task[List[Commit]] = {
-      commitRepository.getExistingId(commits).map(already => filterCommits(commits, already))
-    }
-
-    private def filterCommits(commits: List[Commit], commitsAlready: List[Commit]): List[Commit] = {
+  private def validateNotExistProject(project: Project): Task[Either[GError, Project]] = {
+    projectRepositoy.findByID(project.id)
+      .map(opt => Either.cond(opt.isEmpty, project, DomainError("Project exist", "12201")))
+  }
+  private def filterCommits(commits: List[Commit]): Task[List[Commit]] = {
+    def filterCommits(commits: List[Commit], commitsAlready: List[Commit]): List[Commit] = {
       val idsAlready = commitsAlready.map(_.id)
       commits.filter(c => !idsAlready.contains(c.id))
     }
+    commitRepository.getExistingId(commits).map(filterCommits(commits, _))
+  }
 
   private def transformProject(dto: ProjectGitLabDTO): EitherT[Task, GError, Project] = EitherT.fromEither {
     Project(dto.id, dto.description, dto.name, dto.name_with_namespace, dto.path, dto.path_with_namespace,
@@ -71,7 +63,7 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
   }
 
   def traverseFold[L, R, T](elements: List[T])(f: T => Task[Either[L, R]]): EitherT[Task, L, List[R]] = {
-    elements.foldLeft( EitherT(Task.now(List.empty[R].asRight[L])) ) {
+    elements.foldLeft(EitherT(Task.now(List.empty[R].asRight[L]))) {
       (acc, nxt) => acc.flatMap(list => EitherT(f(nxt)).map(list :+ _))
     }
   }
