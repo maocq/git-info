@@ -4,6 +4,6 @@ import play.api.libs.json.Json
 
 trait TransformerDTOsHTTP {
 
-  implicit val testReads = Json.format[Test]
+  implicit val projectIDDTOReads = Json.format[ProjectIDDTO]
 
 }

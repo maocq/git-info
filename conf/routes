@@ -6,7 +6,7 @@
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
 
-POST    /test                       controllers.ProjectController.test
+POST    /register-project           controllers.ProjectController.registerProject
 
 
 # Map static resources from the /public folder to the /assets URL path

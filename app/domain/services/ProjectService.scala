@@ -2,7 +2,6 @@ package domain.services
 
 import cats.data.EitherT
 import cats.implicits._
-import domain.model.GError.DomainError
 import domain.model.{Commit, Diff, GError, Project}
 import domain.repositories.commit.CommitRepository
 import domain.repositories.project.ProjectRepository
@@ -15,7 +14,7 @@ import monix.eval.Task
 class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitRepository: CommitRepository, gitLab: GitLabService) {
 
   def register(proyectId: Int): EitherT[Task, GError, Project] = for {
-      _ <- validateNotExistProject(proyectId).toEitherT
+      _ <- projectRepositoy.validateNotExistProject(proyectId).toEitherT
       d <- gitLab.getProject(proyectId).toEitherT
       p <- transformProject(d)
       r <- projectRepositoy.insertEither(p).toEitherT
@@ -32,11 +31,6 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
       r <- commitRepository.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
     } yield r
 
-
-  private def validateNotExistProject(projectId: Int): Task[Either[GError, Int]] = {
-    projectRepositoy.findByID(projectId)
-      .map(opt => Either.cond(opt.isEmpty, projectId, DomainError("Project exist", "12201")))
-  }
 
   private def filterCommits(commits: List[Commit]): Task[List[Commit]] = {
     def filterCommits(commits: List[Commit], commitsAlready: List[Commit]): List[Commit] = {
@@ -58,7 +52,7 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
 
   def transformDiffs(diffs: List[(String, List[CommitDiffGitLabDTO])]): EitherT[Task, GError, List[Diff]] = EitherT.fromEither {
     diffs.flatMap(list => list._2.map(d => {
-      val lines = d.diff.split("\\n");
+      val lines = d.diff.split("\n");
       Diff(0, d.old_path, d.new_path, d.a_mode, d.b_mode, d.new_file, d.renamed_file, d.deleted_file, d.diff, lines.count(_.startsWith("+")), lines.count(_.startsWith("-")), list._1)
     })).asRight
   }

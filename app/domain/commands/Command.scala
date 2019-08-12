@@ -8,7 +8,7 @@ import play.api.libs.json.JsValue
 
 trait Command[T]  {
 
-  def execute(value:  T) : Task[Consequence]
+  def execute(dto:  T) : Task[Consequence]
 
   protected def leftConsequence(error: GError): Consequence = Consequence(error.asLeft)
   protected def rightConsequence(json: JsValue): Consequence = Consequence(json.asRight)
