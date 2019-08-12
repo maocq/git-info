@@ -4,17 +4,19 @@ import java.sql.Timestamp
 import java.time.{ZoneOffset, ZonedDateTime}
 
 import javax.inject.Inject
+import persistence.commit.{CommitDAO, CommitRecord}
+import persistence.diff.{DiffDAO, DiffRecord}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class ProjectRecord(
   id: Int, description: String, name: String, nameWithNamespace: String, path: String, pathWithNamespace: String, createdAt: ZonedDateTime, defaultBranch: String,
   sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String
 )
 
-class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
+class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, commitDAO: CommitDAO, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -27,7 +29,12 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     (projectsdb returning projectsdb) += projectRecord
   }
 
-
+  def insertInfoCommits(commitsRecord: List[CommitRecord], diffsRecord: List[DiffRecord]): Future[(List[CommitRecord], List[DiffRecord])] = db.run {
+    (for {
+      x <- commitDAO.insertAllDBIO(commitsRecord)
+      y <- diffDAO.insertAllDBIO(diffsRecord)
+    } yield (x, y)).transactionally
+  }
 
 
   implicit val JavaZonedDateTimeMapper = MappedColumnType.base[ZonedDateTime, Timestamp](

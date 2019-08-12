@@ -15,7 +15,7 @@ case class CommitRecord(
   authorEmail: String, authoredDate: ZonedDateTime, committerName: String, committerEmail: String, committedDate: ZonedDateTime, projectId: Int
 )
 
-class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
+class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, diffDAO: DiffDAO)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -32,12 +32,6 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
     insertAllDBIO(commitsRecord).transactionally
   }
 
-  def insertInfoCommits(commitsRecord: List[CommitRecord], diffsRecord: List[DiffRecord]): Future[(List[CommitRecord], List[DiffRecord])] = db.run {
-    (for {
-      x <- insertAllDBIO(commitsRecord)
-      y <- diffDAO.insertAllDBIO(diffsRecord)
-    } yield (x, y)).transactionally
-  }
 
   def getExistingId(ids: List[String]): Future[Seq[CommitRecord]] = db.run {
     commitsdb.filter(as => as.id.inSet( ids)).result

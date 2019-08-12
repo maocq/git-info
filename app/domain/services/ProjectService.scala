@@ -28,7 +28,7 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
       f <- filterCommits(c).map(_.asRight[GError]).toEitherT
       t <- traverseFold(f)(commit => gitLab.getCommitsDiff(projectId, commit.id))
       d <- transformDiffs(t)
-      r <- commitRepository.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
+      r <- projectRepositoy.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
     } yield r
 
 

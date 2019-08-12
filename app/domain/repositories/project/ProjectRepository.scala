@@ -2,12 +2,14 @@ package domain.repositories.project
 
 import cats.implicits._
 import domain.model.GError.DomainError
-import domain.model.{GError, Project}
+import domain.model.{Commit, Diff, GError, Project}
+import domain.repositories.commit.CommitAdapter
+import domain.repositories.diff.DiffAdapter
 import javax.inject.Inject
 import monix.eval.Task
 import persistence.project.ProjectDAO
 
-class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter {
+class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter with CommitAdapter with DiffAdapter {
 
     def findByID(id: Int): Task[Option[Project]] = Task.deferFuture{
         projectDAO findByID id
@@ -18,6 +20,10 @@ class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter
     } map transform
 
     def insertEither(project: Project): Task[Either[GError, Project]] = insert(project).map(_.asRight[GError])
+
+    def insertInfoCommits(commits: List[Commit], diffs: List[Diff]): Task[(List[Commit], List[Diff])] = Task.deferFuture {
+        projectDAO.insertInfoCommits(commits.map(transform), diffs.map(transform))
+    }.map( r => (r._1.map(transform), r._2.map(transform)) )
 
     def findByIDEither(id: Int): Task[Either[GError, Project]] = {
         findByID(id).map(_.toRight(DomainError("Project not found", "12101")))
