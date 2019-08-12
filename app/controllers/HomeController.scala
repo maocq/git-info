@@ -3,24 +3,26 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import domain.services.ProjectService
+import infrastructure.TransformerDTOsHTTP
 import javax.inject._
+import persistence.querys.ProjectQueryDAO
+import play.api.libs.json.Json
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HomeController @Inject()(projectService: ProjectService, cc: ControllerComponents)(implicit ec: ExecutionContext)
-  extends AbstractController(cc) {
+class HomeController @Inject()(projectQueryDAO: ProjectQueryDAO, projectService: ProjectService, cc: ControllerComponents)(implicit ec: ExecutionContext)
+  extends AbstractController(cc) with TransformerDTOsHTTP {
 
   def index() = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
   }
 
   def test() = Action.async { implicit request: Request[AnyContent] =>
-    Future{
-      Ok(views.html.index())
-    }
+    projectQueryDAO.commitsForUser().map(r => Ok(Json.toJson(r)))
   }
+
 
   def traverseFold[L, R, T](elements: List[T])(f: T => Future[Either[L, R]]): Future[Either[L, List[R]]] = {
     elements.foldLeft( EitherT(Future.successful(List.empty[R].asRight[L])) ) {
