@@ -1,6 +1,6 @@
 package infrastructure
 
-import persistence.querys.{CommitsForUser, DiffsUser}
+import persistence.querys.{CommitsForUser, DiffsUser, FilesWithCommits}
 import play.api.libs.json.Json
 
 trait TransformerDTOsHTTP {
@@ -9,5 +9,6 @@ trait TransformerDTOsHTTP {
 
   implicit val diffsUserFmt = Json.format[DiffsUser]
   implicit val commitsForUserFmt = Json.format[CommitsForUser]
+  implicit val filesWithCommitsFmt = Json.format[FilesWithCommits]
 
 }
