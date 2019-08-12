@@ -16,6 +16,11 @@ class HomeController @Inject()(projectService: ProjectService, cc: ControllerCom
     Ok(views.html.index())
   }
 
+  def test() = Action.async { implicit request: Request[AnyContent] =>
+    Future{
+      Ok(views.html.index())
+    }
+  }
 
   def traverseFold[L, R, T](elements: List[T])(f: T => Future[Either[L, R]]): Future[Either[L, List[R]]] = {
     elements.foldLeft( EitherT(Future.successful(List.empty[R].asRight[L])) ) {

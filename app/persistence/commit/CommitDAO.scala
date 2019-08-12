@@ -5,6 +5,7 @@ import java.time.{ZoneOffset, ZonedDateTime}
 
 import javax.inject.Inject
 import persistence.diff.{DiffDAO, DiffRecord}
+import persistence.project.ProjectDAO
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -15,7 +16,7 @@ case class CommitRecord(
   authorEmail: String, authoredDate: ZonedDateTime, committerName: String, committerEmail: String, committedDate: ZonedDateTime, projectId: Int
 )
 
-class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
+class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, projectDAO: ProjectDAO, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -48,13 +49,12 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
   }
 
 
-
   implicit val JavaZonedDateTimeMapper = MappedColumnType.base[ZonedDateTime, Timestamp](
     l => Timestamp.from(l.toInstant),
     t => ZonedDateTime.ofInstant(t.toInstant, ZoneOffset.UTC)
   )
 
-  private class CommitsRecord(tag: Tag)  extends Table[CommitRecord](tag, "commits") {
+  class CommitsRecord(tag: Tag)  extends Table[CommitRecord](tag, "commits") {
     def id = column[String]("id", O.PrimaryKey)
 
     def shortId = column[String]("short_id")
@@ -70,11 +70,10 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
     def committedDate = column[ZonedDateTime]("committed_date")
     def projectId = column[Int]("project_id")
 
-    def email = column[String]("email")
-
+    def project = foreignKey("project_fk", projectId, projectDAO.projectsdb)(_.id)
     def * = (id, shortId, createdAt, parentIds, title, message, authorName, authorEmail, authoredDate, committerName, committerEmail, committedDate, projectId) <> (CommitRecord.tupled, CommitRecord.unapply)
   }
 
-  private val commitsdb = TableQuery[CommitsRecord]
+  val commitsdb = TableQuery[CommitsRecord]
 
 }

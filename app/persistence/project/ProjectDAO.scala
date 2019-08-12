@@ -35,7 +35,7 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     t => ZonedDateTime.ofInstant(t.toInstant, ZoneOffset.UTC)
   )
 
-  private class ProjectsRecord(tag: Tag)  extends Table[ProjectRecord](tag, "projects") {
+  class ProjectsRecord(tag: Tag)  extends Table[ProjectRecord](tag, "projects") {
     def id = column[Int]("id", O.PrimaryKey)
 
     def description = column[String]("description")
@@ -52,6 +52,6 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     def * = (id, description, name, nameWithNamespace, path, pathWithNamespace, createdAt, defaultBranch, sshUrlToRepo, httpUrlToRepo, webUrl) <> (ProjectRecord.tupled, ProjectRecord.unapply)
   }
 
-  private val projectsdb = TableQuery[ProjectsRecord]
+  val projectsdb = TableQuery[ProjectsRecord]
 
 }

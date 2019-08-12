@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.time.{ZoneOffset, ZonedDateTime}
 
 import javax.inject.Inject
+import persistence.commit.CommitDAO
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -14,7 +15,7 @@ case class DiffRecord(
   renamedFile: Boolean, deletedFile: Boolean, diff: String, additions: Int, deletions: Int, commitId: String
 )
 
-class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
+class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, commitDAO: CommitDAO)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -55,6 +56,7 @@ class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     def deletions = column[Int]("deletions")
     def commitId = column[String]("commit_id")
 
+    def commit = foreignKey("commit_fk", commitId, commitDAO.commitsdb)(_.id)
     def * = (id, oldPath, newPath, aMode, bMode, newFile, renamedFile, deletedFile, diff, additions, deletions, commitId) <> (DiffRecord.tupled, DiffRecord.unapply)
   }
 
