@@ -69,6 +69,7 @@ class CommitDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
     def committedDate = column[ZonedDateTime]("committed_date")
     def projectId = column[Int]("project_id")
 
+    //def project = foreignKey("project_fk", projectId, projectDAO.gett)(_.id)
     def * = (id, shortId, createdAt, parentIds, title, message, authorName, authorEmail, authoredDate, committerName, committerEmail, committedDate, projectId) <> (CommitRecord.tupled, CommitRecord.unapply)
   }
 
