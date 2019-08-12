@@ -20,11 +20,13 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
     http.get[ProjectGitLabDTO](s"https://gitlab.seven4n.com/api/v4/projects/$projectId",
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
   }.map(_.bimap(l => DomainError(s"Project not exist - ${l.error}", "11001"), _.response))
+    .recover{case error => DomainError(error.getMessage, "11000").asLeft}
 
 
   def getAllCommits(id: Int, date: Option[ZonedDateTime]): Task[Either[GError, List[CommitGitLabDTO]]] = Task.deferFuture {
     getAllCommits(id, 1, Nil, date)
   }.map(_.bimap(l => DomainError(l.error, "11002"), _.response))
+    .recover{case error => DomainError(error.getMessage, "11000").asLeft}
 
 
   def getCommitsDiff(projectId: Int, commit: String): Task[Either[GError, (String, List[CommitDiffGitLabDTO])]] = Task.deferFuture {
@@ -32,6 +34,9 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
       s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits/$commit/diff?per_page=500",
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
   }.map(_.bimap(l => DomainError(l.error, "11001"), right => (commit, right.response)))
+    .recover{case error => DomainError(error.getMessage, "11000").asLeft}
+
+
 
   private def getAllCommits(id: Int, page: Int, lista: List[CommitGitLabDTO], date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] ={
     getCommits(id, page, date).flatMap {
