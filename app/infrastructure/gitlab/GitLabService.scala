@@ -24,7 +24,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
 
 
   def getAllCommits(id: Int, date: Option[ZonedDateTime]): Task[Either[GError, List[CommitGitLabDTO]]] = Task.deferFuture {
-    getAllCommits(id, 1, Nil, date)
+    getAllCommits(id, 1, Nil, date.map(_.plusSeconds(1)))
   }.map(_.bimap(l => DomainError(l.error, "11002"), _.response))
     .recover{case error => DomainError(error.getMessage, "11000").asLeft}
 

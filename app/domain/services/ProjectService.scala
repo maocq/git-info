@@ -21,7 +21,7 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
     } yield r
 
   def registerCommits(projectId: Int): EitherT[Task, GError, (List[Commit], List[Diff])] = for {
-      p <- projectRepositoy.findByIDEither(projectId).toEitherT
+      _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       _ <- projectRepositoy.onUpdating(projectId).toEitherT
       l <- commitRepository.getLastDateCommit(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllCommits(projectId, l).toEitherT

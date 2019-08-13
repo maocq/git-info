@@ -17,10 +17,15 @@ class RegisterProjectCommand @Inject()(projectService: ProjectService) extends C
 
   def execute(dto: ProjectIDDTO): Task[Consequence] = {
     (for {
-        x <- projectService.register(dto.id)
-        _ <- updateInfoProject(dto.id).toEitherT
+      x <- projectService.register(dto.id)
+      _ <- updateInfoProject(dto.id).toEitherT
     } yield x)
       .fold(leftConsequence, r => rightConsequence(Json.toJson(r)))
+    /*
+    projectService.registerCommits(dto.id)
+      .fold(leftConsequence, r => rightConsequence(Json.toJson(r)))
+      .doOnFinish(_ => projectService.finishUpdating(dto.id))
+     */
   }
 
   def updateInfoProject(projectID: Int) = {
