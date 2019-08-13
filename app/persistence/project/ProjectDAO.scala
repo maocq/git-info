@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class ProjectRecord(
   id: Int, description: String, name: String, nameWithNamespace: String, path: String, pathWithNamespace: String, createdAt: ZonedDateTime, defaultBranch: String,
-  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String
+  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String, updating: Boolean = false
 )
 
 class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, commitDAO: CommitDAO, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
@@ -36,6 +36,16 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     } yield (x, y)).transactionally
   }
 
+  def onUpdating(id: Int): Future[Int] = db.run {
+    (for {
+      p <- projectsdb if p.id === id && p.updating === false
+    } yield p.updating).update(true)
+  }
+
+  def offUpdating(id: Int): Future[Int] = db.run {
+    projectsdb.filter(_.id === id).map(_.updating).update(false)
+  }
+
 
   implicit val JavaZonedDateTimeMapper = MappedColumnType.base[ZonedDateTime, Timestamp](
     l => Timestamp.from(l.toInstant),
@@ -55,8 +65,9 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     def sshUrlToRepo = column[String]("ssh_url_to_repo")
     def httpUrlToRepo = column[String]("http_url_to_repo")
     def webUrl = column[String]("web_url")
+    def updating = column[Boolean]("updating")
 
-    def * = (id, description, name, nameWithNamespace, path, pathWithNamespace, createdAt, defaultBranch, sshUrlToRepo, httpUrlToRepo, webUrl) <> (ProjectRecord.tupled, ProjectRecord.unapply)
+    def * = (id, description, name, nameWithNamespace, path, pathWithNamespace, createdAt, defaultBranch, sshUrlToRepo, httpUrlToRepo, webUrl, updating) <> (ProjectRecord.tupled, ProjectRecord.unapply)
   }
 
   private val projectsdb = TableQuery[ProjectsRecord]

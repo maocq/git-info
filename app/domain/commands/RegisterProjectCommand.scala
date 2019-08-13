@@ -24,8 +24,12 @@ class RegisterProjectCommand @Inject()(projectService: ProjectService) extends C
   }
 
   def updateInfoProject(projectID: Int) = {
-    Task.eval{
-      projectService.registerCommits(projectID).value.runToFuture
+    Task.eval {
+      projectService.registerCommits(projectID)
+        .fold(l => "=(", r => "=)")
+        .doOnFinish(_ => projectService.finishUpdating(projectID))
+        .runToFuture
+
       "ok".asRight[GError]
     }
   }

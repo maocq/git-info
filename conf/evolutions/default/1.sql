@@ -13,6 +13,7 @@ CREATE TABLE projects
     ssh_url_to_repo VARCHAR(250) NOT NULL,
     http_url_to_repo VARCHAR(250) NOT NULL,
     web_url VARCHAR(250) NOT NULL,
+    updating BOOLEAN NOT NULL DEFAULT FALSE,
 
     CONSTRAINT project_pk PRIMARY KEY (id)
 );

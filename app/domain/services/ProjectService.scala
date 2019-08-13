@@ -21,7 +21,8 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
     } yield r
 
   def registerCommits(projectId: Int): EitherT[Task, GError, (List[Commit], List[Diff])] = for {
-      _ <- projectRepositoy.findByIDEither(projectId).toEitherT
+      p <- projectRepositoy.findByIDEither(projectId).toEitherT
+      _ <- projectRepositoy.onUpdating(projectId).toEitherT
       l <- commitRepository.getLastDateCommit(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllCommits(projectId, l).toEitherT
       c <- transformCommits(a, projectId)
@@ -31,6 +32,9 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
       r <- projectRepositoy.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
     } yield r
 
+  def finishUpdating(projectId: Int): Task[Unit] = {
+    projectRepositoy.offUpdating(projectId).map(e => Unit)
+  }
 
   private def filterCommits(commits: List[Commit]): Task[List[Commit]] = {
     def filterCommits(commits: List[Commit], commitsAlready: List[Commit]): List[Commit] = {

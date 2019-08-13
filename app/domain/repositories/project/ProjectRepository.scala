@@ -34,4 +34,12 @@ class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter
           .map(opt => Either.cond(opt.isEmpty, projectId, DomainError("Project exist", "12201")))
     }
 
+    def onUpdating(projectId: Int): Task[Either[GError, Int]] = Task.deferFuture {
+        projectDAO onUpdating projectId
+    }.map(n => Either.cond(n > 0, n, DomainError("Updating project", "13000")))
+
+    def offUpdating(projectId: Int): Task[Either[GError, Int]] = Task.deferFuture {
+        projectDAO offUpdating projectId
+    }.map(_.asRight)
+
 }
