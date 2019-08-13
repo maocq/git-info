@@ -9,10 +9,12 @@ import infrastructure.{MessageDTO, ProjectIDDTO}
 import javax.inject.Inject
 import monix.eval.Task
 import monix.execution.Scheduler
+import play.api.Logger
 import play.api.libs.json.Json
 
 
 class RegisterProjectCommand @Inject()(projectService: ProjectService) extends Command[ProjectIDDTO] with TransformerDomain with ErrorsTransformer {
+  val logger: Logger = Logger(this.getClass)
 
   implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
 
@@ -27,9 +29,8 @@ class RegisterProjectCommand @Inject()(projectService: ProjectService) extends C
   def updateInfoProject(projectID: Int) = {
     Task.eval {
       projectService.registerCommits(projectID)
-        .fold(Json.toJson(_), Json.toJson(_))
-        .doOnFinish(_ => projectService.finishUpdating(projectID))
-        .runToFuture
+        .fold(l => {if(l.errrorCode != "13000") projectService.finishUpdating(projectID).runToFuture;Json.toJson(l)}, Json.toJson(_))
+        .foreach(i => logger.info(s"Response: $i"))
 
       MessageDTO("Updating info").asRight[GError]
     }

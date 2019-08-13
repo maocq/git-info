@@ -13,6 +13,8 @@ import monix.eval.Task
 
 class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitRepository: CommitRepository, gitLab: GitLabService) {
 
+  def getProject(proyectId: Int): Task[Either[GError, Project]] = projectRepositoy.findByIDEither(proyectId)
+
   def register(proyectId: Int): EitherT[Task, GError, Project] = for {
       _ <- projectRepositoy.validateNotExistProject(proyectId).toEitherT
       d <- gitLab.getProject(proyectId).toEitherT
@@ -30,10 +32,11 @@ class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitReposi
       t <- traverseFold(f)(commit => gitLab.getCommitsDiff(projectId, commit.id))
       d <- transformDiffs(t)
       r <- projectRepositoy.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
+      _ <- projectRepositoy.offUpdating(projectId).toEitherT
     } yield r
 
-  def finishUpdating(projectId: Int): Task[Unit] = {
-    projectRepositoy.offUpdating(projectId).map(e => Unit)
+  def finishUpdating(projectId: Int): Task[Either[GError, Int]] = {
+    projectRepositoy.offUpdating(projectId)
   }
 
   private def filterCommits(commits: List[Commit]): Task[List[Commit]] = {

@@ -19,6 +19,7 @@ class UpdateProjectCommand @Inject()(projectService: ProjectService) extends Com
 
   def execute(dto: ProjectIDDTO): Task[Consequence] = {
     (for {
+      p <- projectService.getProject(dto.id).toEitherT
       x <- updateInfoProject(dto.id).toEitherT
     } yield x)
       .fold(leftConsequence, r => rightConsequence(Json.toJson(r)))
@@ -27,8 +28,7 @@ class UpdateProjectCommand @Inject()(projectService: ProjectService) extends Com
   def updateInfoProject(projectID: Int) = {
     Task.eval {
       projectService.registerCommits(projectID)
-        .fold(Json.toJson(_), Json.toJson(_))
-        .doOnFinish(_ => projectService.finishUpdating(projectID))
+        .fold(l => {if(l.errrorCode != "13000") projectService.finishUpdating(projectID).runToFuture;Json.toJson(l)}, Json.toJson(_))
         .foreach(i => logger.info(s"Response: $i"))
 
       MessageDTO("Updating info").asRight[GError]
