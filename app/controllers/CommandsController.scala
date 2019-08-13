@@ -5,7 +5,6 @@ import domain.commands.Command
 import domain.model.GError
 import domain.model.GError.{DomainError, TechnicalError, ValidationError}
 import monix.eval.Task
-import monix.execution.Scheduler.Implicits.global
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json, Reads}
 import play.api.mvc.{AbstractController, ControllerComponents, Result}
@@ -26,7 +25,7 @@ class CommandsController(cc: ControllerComponents)
     ).recover { case error =>
       logger.error(s"Internal server error ${error.getMessage}", error)
       InternalServerError(Json.toJson(TechnicalError("Internal server error", "30000")))
-    }.runToFuture
+    }.runToFuture(command.executor)
   }
 
   private def validateJson[T](json: JsValue)(implicit m: Reads[T]): Either[List[String], T] = {

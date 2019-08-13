@@ -7,11 +7,13 @@ import implicits.implicits._
 import infrastructure.ProjectIDDTO
 import javax.inject.Inject
 import monix.eval.Task
-import monix.execution.Scheduler.Implicits.global
+import monix.execution.Scheduler
 import play.api.libs.json.Json
 
 
 class RegisterProjectCommand @Inject()(projectService: ProjectService) extends Command[ProjectIDDTO] with TransformerDomain {
+
+  implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
 
   def execute(dto: ProjectIDDTO): Task[Consequence] = {
     (for {

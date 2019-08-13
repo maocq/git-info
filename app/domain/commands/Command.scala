@@ -3,10 +3,13 @@ package domain.commands
 import cats.implicits._
 import domain.model.GError
 import monix.eval.Task
+import monix.execution.Scheduler
 import play.api.libs.json.JsValue
 
 
 trait Command[T]  {
+
+  implicit val executor: Scheduler
 
   def execute(dto:  T) : Task[Consequence]
 
