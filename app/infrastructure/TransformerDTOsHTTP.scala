@@ -7,8 +7,8 @@ trait TransformerDTOsHTTP {
 
   implicit val projectIDDTOReads = Json.format[ProjectIDDTO]
 
+  implicit val infoUserDTOFmt = Json.format[InfoUserDTO]
   implicit val diffsUserFmt = Json.format[DiffsUser]
   implicit val commitsForUserFmt = Json.format[CommitsForUser]
   implicit val filesWithCommitsFmt = Json.format[FilesWithCommits]
-
 }

@@ -8,6 +8,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
+case class CommitsUser(email: String, commit: String, additions: Int, deletions: Int)
 case class DiffsUser(project: String, commiter: String, additions: Int, deletions: Int)
 case class CommitsForUser(project: String, commiter: String, commits: Int)
 case class FilesWithCommits(project: String, path: String, commits: Int)
@@ -18,6 +19,17 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   extends HasDatabaseConfigProvider[JdbcProfile] with  TransformerQuery {
 
   import profile.api._
+
+  def commitUser(): Future[Vector[CommitsUser]] = db.run {
+    sql"""
+          SELECT cm.committer_email, cm.id, sum(df.additions) AS additions, sum(df.deletions) AS deletions
+            FROM diffs df
+            INNER JOIN commits cm ON df.commit_id = cm.id
+            INNER JOIN projects pj ON cm.project_id = pj.id
+            GROUP BY cm.id, cm.committer_email
+            ORDER BY cm.committer_email, cm.id;
+       """.as[CommitsUser]
+  }
 
   def diffsUsers(): Future[Vector[DiffsUser]] = db.run {
     sql"""
