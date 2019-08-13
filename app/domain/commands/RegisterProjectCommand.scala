@@ -1,17 +1,18 @@
 package domain.commands
 
 import cats.implicits._
+import controllers.ErrorsTransformer
 import domain.model.{GError, TransformerDomain}
 import domain.services.ProjectService
 import implicits.implicits._
-import infrastructure.ProjectIDDTO
+import infrastructure.{MessageDTO, ProjectIDDTO}
 import javax.inject.Inject
 import monix.eval.Task
 import monix.execution.Scheduler
 import play.api.libs.json.Json
 
 
-class RegisterProjectCommand @Inject()(projectService: ProjectService) extends Command[ProjectIDDTO] with TransformerDomain {
+class RegisterProjectCommand @Inject()(projectService: ProjectService) extends Command[ProjectIDDTO] with TransformerDomain with ErrorsTransformer {
 
   implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
 
@@ -26,11 +27,11 @@ class RegisterProjectCommand @Inject()(projectService: ProjectService) extends C
   def updateInfoProject(projectID: Int) = {
     Task.eval {
       projectService.registerCommits(projectID)
-        .fold(l => "=(", r => "=)")
+        .fold(Json.toJson(_), Json.toJson(_))
         .doOnFinish(_ => projectService.finishUpdating(projectID))
         .runToFuture
 
-      "ok".asRight[GError]
+      MessageDTO("Updating info").asRight[GError]
     }
   }
 }
