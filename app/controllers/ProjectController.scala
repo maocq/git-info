@@ -1,6 +1,6 @@
 package controllers
 
-import domain.commands.RegisterProjectCommand
+import domain.commands.{RegisterProjectCommand, UpdateProjectCommand}
 import infrastructure.{InfoUserDTO, TransformerDTOsHTTP}
 import javax.inject.Inject
 import persistence.querys.ProjectQueryDAO
@@ -11,6 +11,7 @@ import scala.concurrent.ExecutionContext
 
 class ProjectController @Inject()(
   registerProject: RegisterProjectCommand,
+  updateProjectCommand: UpdateProjectCommand,
   projectQueryDAO: ProjectQueryDAO,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -18,6 +19,10 @@ class ProjectController @Inject()(
 
   def registerProject: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
     ejecutar(registerProject, request.body)
+  }
+
+  def updateProject: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
+    ejecutar(updateProjectCommand, request.body)
   }
 
   def infoUsers() = Action.async { implicit request: Request[AnyContent] =>

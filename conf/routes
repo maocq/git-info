@@ -5,9 +5,10 @@
 
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
-GET     /test                       controllers.HomeController.test
+GET     /infoUsers                  controllers.ProjectController.infoUsers
 
 POST    /register-project           controllers.ProjectController.registerProject
+POST    /update-project             controllers.ProjectController.updateProject
 
 
 # Map static resources from the /public folder to the /assets URL path
