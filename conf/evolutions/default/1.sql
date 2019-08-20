@@ -57,9 +57,21 @@ CREATE TABLE diffs
     CONSTRAINT diff_commit_id_fk FOREIGN KEY (commit_id) REFERENCES commits (id)
 );
 
+CREATE TABLE users
+(
+    id INTEGER NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    username VARCHAR(200) NOT NULL,
+    avatar_url VARCHAR(250) NOT NULL,
+    web_url VARCHAR(250) NOT NULL,
+
+    CONSTRAINT user_pk PRIMARY KEY (id)
+)
+
 
 # --- !Downs
 
 DROP TABLE diffs;
 DROP TABLE commits;
 DROP TABLE projects;
+DROP TABLE users;
