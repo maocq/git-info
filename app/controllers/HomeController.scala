@@ -3,16 +3,18 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import infrastructure.TransformerDTOsHTTP
+import infrastructure.gitlab.GitLabService
 import javax.inject._
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext)
+class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOsHTTP {
 
   def index() = Action { implicit request: Request[AnyContent] =>
+    gitLabService.getMergeRequest(174, 1).map(s => s.toString).recover{case es => es.toString}.foreach(e => println(e))
     Ok(views.html.index())
   }
 

@@ -48,6 +48,12 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
     }
   }
 
+  //En construccion
+  def getMergeRequest(projectId: Int, page: Int): Future[Either[ErrorHTTP, ResponseHTTP[List[MergeRequestDTO]]]] = {
+    http.get[List[MergeRequestDTO]](s"https://gitlab.seven4n.com/api/v4/projects/$projectId/merge_requests?per_page=100",
+      Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
+  }
+
   private def getCommits(projectId: Int, page: Int, date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] = {
     http.get[List[CommitGitLabDTO]](s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits?page=$page&per_page=100&since=${date.getOrElse("")}",
       Map("Private-Token" -> "mx7o6YbX7euiykysiGMg"))
