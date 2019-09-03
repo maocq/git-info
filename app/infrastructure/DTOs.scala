@@ -22,8 +22,7 @@ case class MergeRequestDTO(
   project_id: Int,
   title: String,
   description: String,
-  state: String
-  /*
+  state: String,
   created_at: ZonedDateTime,
   updated_at: ZonedDateTime,
   merged_by: Option[UserGitLabDTO],
@@ -34,10 +33,11 @@ case class MergeRequestDTO(
   source_branch: String,
   user_notes_count: String,
   upvotes: String,
-  downvotes: String,
-  assignee: Option[UserGitLabDTO],
-  author: UserGitLabDTO,
-  source_project_id: Int,
-  target_project_id: Int
-   */
+  downvotes: String
+  /*
+assignee: Option[UserGitLabDTO],
+author: UserGitLabDTO,
+source_project_id: Int,
+target_project_id: Int
+*/
 )
