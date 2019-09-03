@@ -5,16 +5,22 @@ import cats.implicits._
 import infrastructure.TransformerDTOsHTTP
 import infrastructure.gitlab.GitLabService
 import javax.inject._
+import persistence.project.GitLabDB
+import play.api.libs.json.Json
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService)(implicit ec: ExecutionContext)
+class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, tt: GitLabDB)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOsHTTP {
 
   def index() = Action { implicit request: Request[AnyContent] =>
-    gitLabService.getMergeRequest(174, 1).map(s => s.toString).recover{case es => es.toString}.foreach(e => println(e))
+    //gitLabService.getMergeRequest(174, 1).map(s => s.toString).recover{case es => es.toString}.foreach(e => println(e))
+    tt.b().recover{case er =>
+        Vector.empty
+    }.foreach(res => println(Json.toJson(res)))
+
     Ok(views.html.index())
   }
 
