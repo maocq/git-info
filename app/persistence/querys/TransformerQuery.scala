@@ -1,6 +1,6 @@
 package persistence.querys
 
-import persistence.project.IssueState
+import persistence.project.{IssueState, UserIssuesClosed}
 import slick.jdbc.GetResult
 
 trait TransformerQuery {
@@ -12,5 +12,5 @@ trait TransformerQuery {
 
 
   implicit val GetIssueState = GetResult(r => IssueState(state  = r.<<, date = r.nextTimestamp().toLocalDateTime.toLocalDate, count = r.<<))
-
+  implicit val GetUserIssuesClosed = GetResult(r => UserIssuesClosed(user = r.<<, count = r.<<))
 }

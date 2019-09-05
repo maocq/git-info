@@ -1,7 +1,7 @@
 package infrastructure
 
 import controllers.IssuesForStatus
-import persistence.project.IssueState
+import persistence.project.{IssueState, UserIssuesClosed}
 import persistence.querys.{CommitsForUser, DiffsUser, FilesWithCommits}
 import play.api.libs.json.Json
 
@@ -17,7 +17,8 @@ trait TransformerDTOsHTTP {
 
 
   implicit val issueStateFmt = Json.format[IssueState]
-  implicit val yopFmt = Json.format[IssuesForStatus]
+  implicit val issuesForStatusFmt = Json.format[IssuesForStatus]
+  implicit val UserIssuesClosedFmt = Json.format[UserIssuesClosed]
 
 
 }

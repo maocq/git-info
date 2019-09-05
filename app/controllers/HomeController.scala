@@ -25,6 +25,13 @@ class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabSe
     Ok(views.html.index())
   }
 
+  def userIssuesClosed() = Action.async {
+    val end = LocalDate.now()
+    val start = end.minusDays(30)
+    gitLab.userIssuesClosed(start, end)
+      .map(d => Ok(Json.toJson(d)))
+  }
+
   def issues() = Action.async {
     val end = LocalDate.now()
     val start = end.minusDays(30)
@@ -33,7 +40,7 @@ class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabSe
       .map{issues =>
         val groupIssues = issues.toList.groupBy(_.state).map{case (k, v) => IssuesForStatus(k, v)}.toList
         validateAndFillDates(groupIssues, issues.headOption, issues.reverse.headOption)
-      }.map(g => Ok(Json.toJson(g)))
+      }.map(d => Ok(Json.toJson(d)))
   }
 
   private def validateAndFillDates(issues: List[IssuesForStatus], startIssue: Option[IssueState], endIssue: Option[IssueState]): List[IssuesForStatus] = {
