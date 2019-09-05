@@ -1,27 +1,57 @@
 package controllers
 
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+
 import cats.data.EitherT
 import cats.implicits._
 import infrastructure.TransformerDTOsHTTP
 import infrastructure.gitlab.GitLabService
 import javax.inject._
-import persistence.project.GitLabDB
+import persistence.project.{GitLabDB, IssueState}
 import play.api.libs.json.Json
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
+case class IssuesForStatus(status: String, infoIssue: List[IssueState])
+
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, tt: GitLabDB)(implicit ec: ExecutionContext)
+class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, gitLab: GitLabDB)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOsHTTP {
 
   def index() = Action { implicit request: Request[AnyContent] =>
     //gitLabService.getMergeRequest(174, 1).map(s => s.toString).recover{case es => es.toString}.foreach(e => println(e))
-    tt.b().recover{case er =>
-        Vector.empty
-    }.foreach(res => println(Json.toJson(res)))
-
     Ok(views.html.index())
+  }
+
+  def issues() = Action.async {
+    val end = LocalDate.now()
+    val start = end.minusDays(30)
+
+    gitLab.issuesState(start, end)
+      .map{issues =>
+        val groupIssues = issues.toList.groupBy(_.state).map{case (k, v) => IssuesForStatus(k, v)}.toList
+        validateAndFillDates(groupIssues, issues.headOption, issues.reverse.headOption)
+      }.map(g => Ok(Json.toJson(g)))
+  }
+
+  private def validateAndFillDates(issues: List[IssuesForStatus], startIssue: Option[IssueState], endIssue: Option[IssueState]): List[IssuesForStatus] = {
+    (for {
+      s <- startIssue
+      e <- endIssue
+    } yield (s.date, e.date))
+      .map(date => issues.map(fillDates(_, date._1, date._2)))
+      .getOrElse(issues)
+  }
+
+  private def fillDates(issue: IssuesForStatus, start: LocalDate, end: LocalDate): IssuesForStatus = {
+    val issues = (0 until ChronoUnit.DAYS.between(start, end).toInt).map{ i =>
+      val date = start.plusDays(i)
+      issue.infoIssue.find(_.date == date).getOrElse(IssueState(issue.status, date, 0))
+    }.toList
+
+    issue.copy(infoIssue = issues)
   }
 
 
