@@ -13,6 +13,7 @@ class UserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
+  import UserTable._
 
   def insert(userRecord: UserGitRecord): Future[UserGitRecord] = db.run {
     (usersdb returning usersdb) += userRecord
@@ -31,19 +32,5 @@ class UserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   def insertOrUpdate(userRecord: UserGitRecord): Future[Option[UserGitRecord]] = db.run {
     (usersdb returning usersdb) insertOrUpdate userRecord
   }
-
-  private class UsersGitRecord(tag: Tag)  extends Table[UserGitRecord](tag, "users") {
-    def id = column[Int]("id", O.PrimaryKey)
-
-    def name = column[String]("name")
-    def username = column[String]("username")
-    def state = column[String]("state")
-    def avatarUrl = column[String]("avatar_url")
-    def webUrl = column[String]("web_url")
-
-    def * = (id, name, username, avatarUrl, webUrl) <> (UserGitRecord.tupled, UserGitRecord.unapply)
-  }
-
-  private val usersdb = TableQuery[UsersGitRecord]
 
 }
