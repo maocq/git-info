@@ -29,7 +29,7 @@ object DiffTable {
     def deletions = column[Int]("deletions")
     def commitId = column[String]("commit_id")
 
-    //def commit = foreignKey("commit_fk", commitId, commitDAO.commitsdb)(_.id)
+    //def commit = foreignKey("commit_fk", commitId, commitsdb)(_.id)
     def * = (id, oldPath, newPath, aMode, bMode, newFile, renamedFile, deletedFile, diff, additions, deletions, commitId) <> (DiffRecord.tupled, DiffRecord.unapply)
   }
 }

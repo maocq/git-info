@@ -8,6 +8,7 @@ import cats.implicits._
 import infrastructure.TransformerDTOsHTTP
 import infrastructure.gitlab.GitLabService
 import javax.inject._
+import persistence.diff.DiffDAO
 import persistence.project.{GitLabDB, IssueState}
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -17,10 +18,11 @@ import scala.concurrent.{ExecutionContext, Future}
 case class IssuesForStatus(status: String, infoIssue: List[IssueState])
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, gitLab: GitLabDB)(implicit ec: ExecutionContext)
+class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, gitLab: GitLabDB, s: DiffDAO)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOsHTTP {
 
   def index() = Action { implicit request: Request[AnyContent] =>
+    s.test1().recover{case es => es.toString}.foreach(e => println(e))
     //gitLabService.getMergeRequest(174, 1).map(s => s.toString).recover{case es => es.toString}.foreach(e => println(e))
     Ok(views.html.index())
   }

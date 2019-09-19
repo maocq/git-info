@@ -61,4 +61,17 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       """.as[FilesWithCommits]
   }
 
+  /*
+  Actividad commits
+  select date(committed_date) as date_commit, count(*) from commits
+  group by date_commit order by date_commit;
+   */
+  
+  /*
+  Actividad impacto
+  select date(committed_date) as date_commit, sum(additions) + sum(deletions) as modifidies from diffs df
+inner join commits cm on cm.id = df.commit_id
+group by date_commit order by date_commit;
+   */
+
 }

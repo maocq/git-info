@@ -1,9 +1,7 @@
 package persistence.diff
 
-import java.sql.Timestamp
-import java.time.{ZoneOffset, ZonedDateTime}
-
 import javax.inject.Inject
+import persistence.commit.CommitTable.commitsdb
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -33,4 +31,11 @@ class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     insertAllDBIO(diffsRecord)
       .transactionally
   }
+
+  def test1() = db.run {
+    commitsdb.sortBy(_.id).result
+    //commitsdb.groupBy(c => c.id).map{ case (id, group) => (id, group.map(_.title).countDistinct)}.result
+
+  }
+
 }
