@@ -32,9 +32,17 @@ class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   }
 
   def test1() = db.run {
-    commitsdb.groupBy(c => dateDB(c.committedDate))
-      .map{ case (id, group) => (id, group.map(_.title).countDistinct)}
-      .result
+    (for {
+      d <- diffsdb
+      c <- commitsdb
+    } yield (c.committedDate, d.additions + d.deletions))
+        .groupBy{ case (d, a) => dateDB(d)}
+        .map{ case (d, group) => (d, group.countDistinct)}
+        .sortBy(_._1.desc)
+        .result
+
+    //commitsdb.groupBy(c => dateDB(c.committedDate)).map{ case (id, group) => (id, group.map(_.title).countDistinct)}.result
+
   }
 
 }
