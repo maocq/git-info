@@ -1,18 +1,12 @@
 package persistence.diff
 
-import java.sql.Timestamp
-import java.time.{ZoneOffset, ZonedDateTime}
+import implicits.SlickImplicits
 
-object DiffTable {
+object DiffTable extends SlickImplicits {
 
   import slick.jdbc.PostgresProfile.api._
 
   val diffsdb = TableQuery[DiffsRecord]
-
-  implicit val JavaZonedDateTimeMapper = MappedColumnType.base[ZonedDateTime, Timestamp](
-    l => Timestamp.from(l.toInstant),
-    t => ZonedDateTime.ofInstant(t.toInstant, ZoneOffset.UTC)
-  )
 
   class DiffsRecord(tag: Tag)  extends Table[DiffRecord](tag, "diffs") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)

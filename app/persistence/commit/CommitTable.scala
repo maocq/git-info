@@ -1,18 +1,14 @@
 package persistence.commit
 
-import java.sql.Timestamp
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time.ZonedDateTime
 
-object CommitTable {
+import implicits.SlickImplicits
+
+object CommitTable extends SlickImplicits {
 
   import slick.jdbc.PostgresProfile.api._
 
   val commitsdb = TableQuery[CommitsRecord]
-
-  implicit val JavaZonedDateTimeMapper = MappedColumnType.base[ZonedDateTime, Timestamp](
-    l => Timestamp.from(l.toInstant),
-    t => ZonedDateTime.ofInstant(t.toInstant, ZoneOffset.UTC)
-  )
 
   class CommitsRecord(tag: Tag)  extends Table[CommitRecord](tag, "commits") {
     def id = column[String]("id", O.PrimaryKey)

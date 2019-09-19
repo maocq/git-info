@@ -1,18 +1,14 @@
 package persistence.project
 
-import java.sql.Timestamp
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time.ZonedDateTime
 
-object ProjectTable {
+import implicits.SlickImplicits
+
+object ProjectTable extends SlickImplicits {
 
   import slick.jdbc.PostgresProfile.api._
 
   val projectsdb = TableQuery[ProjectsRecord]
-
-  implicit val JavaZonedDateTimeMapper = MappedColumnType.base[ZonedDateTime, Timestamp](
-    l => Timestamp.from(l.toInstant),
-    t => ZonedDateTime.ofInstant(t.toInstant, ZoneOffset.UTC)
-  )
 
   class ProjectsRecord(tag: Tag)  extends Table[ProjectRecord](tag, "projects") {
     def id = column[Int]("id", O.PrimaryKey)

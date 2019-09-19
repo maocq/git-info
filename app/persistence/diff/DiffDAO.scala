@@ -15,9 +15,8 @@ case class DiffRecord(
 class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
-  import profile.api._
   import DiffTable._
-
+  import profile.api._
 
   def insert(diffRecord: DiffRecord): Future[DiffRecord] = db.run {
     (diffsdb returning diffsdb) += diffRecord
@@ -33,9 +32,9 @@ class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   }
 
   def test1() = db.run {
-    commitsdb.sortBy(_.id).result
-    //commitsdb.groupBy(c => c.id).map{ case (id, group) => (id, group.map(_.title).countDistinct)}.result
-
+    commitsdb.groupBy(c => dateDB(c.committedDate))
+      .map{ case (id, group) => (id, group.map(_.title).countDistinct)}
+      .result
   }
 
 }
