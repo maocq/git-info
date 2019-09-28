@@ -1,4 +1,12 @@
 # --- !Ups
+CREATE TABLE groups
+(
+    id SERIAL,
+    name VARCHAR(250) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+
+    CONSTRAINT groups_pk PRIMARY KEY (id)
+);
 
 CREATE TABLE projects
 (
@@ -14,8 +22,10 @@ CREATE TABLE projects
     http_url_to_repo VARCHAR(250) NOT NULL,
     web_url VARCHAR(250) NOT NULL,
     updating BOOLEAN NOT NULL DEFAULT FALSE,
+    group_id INTEGER NOT NULL,
 
-    CONSTRAINT project_pk PRIMARY KEY (id)
+    CONSTRAINT project_pk PRIMARY KEY (id),
+    CONSTRAINT project_group_id_fk FOREIGN KEY (group_id) REFERENCES groups (id)
 );
 
 CREATE TABLE commits
@@ -71,7 +81,8 @@ CREATE TABLE users
 
 # --- !Downs
 
+DROP TABLE users;
 DROP TABLE diffs;
 DROP TABLE commits;
 DROP TABLE projects;
-DROP TABLE users;
+DROP TABLE groups;
