@@ -1,7 +1,7 @@
 package infrastructure
 
 //Request
-case class ProjectIDDTO(id: Int)
+case class ProjectIDDTO(id: Int, groupId: Int)
 
 //Response
 case class MessageDTO(message: String)

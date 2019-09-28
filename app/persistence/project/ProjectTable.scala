@@ -23,8 +23,9 @@ object ProjectTable extends SlickImplicits {
     def sshUrlToRepo = column[String]("ssh_url_to_repo")
     def httpUrlToRepo = column[String]("http_url_to_repo")
     def webUrl = column[String]("web_url")
+    def groupId = column[Int]("group_id")
     def updating = column[Boolean]("updating")
 
-    def * = (id, description, name, nameWithNamespace, path, pathWithNamespace, createdAt, defaultBranch, sshUrlToRepo, httpUrlToRepo, webUrl, updating) <> (ProjectRecord.tupled, ProjectRecord.unapply)
+    def * = (id, description, name, nameWithNamespace, path, pathWithNamespace, createdAt, defaultBranch, sshUrlToRepo, httpUrlToRepo, webUrl, groupId, updating) <> (ProjectRecord.tupled, ProjectRecord.unapply)
   }
 }

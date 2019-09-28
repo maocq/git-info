@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class ProjectRecord(
   id: Int, description: String, name: String, nameWithNamespace: String, path: String, pathWithNamespace: String, createdAt: ZonedDateTime, defaultBranch: String,
-  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String, updating: Boolean = false
+  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String, groupId: Int, updating: Boolean = false
 )
 
 class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, commitDAO: CommitDAO, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
