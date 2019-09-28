@@ -1,5 +1,8 @@
 package persistence.diff
 
+import java.sql.Date
+import java.time.ZonedDateTime
+
 import javax.inject.Inject
 import persistence.commit.CommitTable.commitsdb
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -31,18 +34,20 @@ class DiffDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
       .transactionally
   }
 
+  case class DateValue(date: Date, value: Int)
+
   def test1() = db.run {
+    val z = ZonedDateTime.now().minusYears(1)
+
     (for {
       d <- diffsdb
-      c <- commitsdb
-    } yield (c.committedDate, d.additions + d.deletions))
-        .groupBy{ case (d, a) => dateDB(d)}
-        .map{ case (d, group) => (d, group.countDistinct)}
-        .sortBy(_._1.desc)
-        .result
-
-    //commitsdb.groupBy(c => dateDB(c.committedDate)).map{ case (id, group) => (id, group.map(_.title).countDistinct)}.result
-
+      c <- commitsdb if d.commitId === c.id
+    } yield (c.committedDate, d.additions + d.deletions)).groupBy{ case (d, a) => dateDB(d)}
+      .map{ case (d, group) => (d, group.map(_._2).sum.getOrElse(0))}
+      .filter(f => f._1 >= Date.valueOf(z.toLocalDate))
+      .sortBy(_._1.desc)
+      .map(_.mapTo[DateValue])
+      .result
   }
 
 }
