@@ -1,9 +1,13 @@
 package domain.services
 
+import java.time.ZonedDateTime
+
 import cats.data.EitherT
 import cats.implicits._
-import domain.model.{Commit, Diff, GError, Project}
+import domain.model.GError.{DomainError, ValidationError}
+import domain.model.{Commit, Diff, GError, Group, Project}
 import domain.repositories.commit.CommitRepository
+import domain.repositories.group.GroupRepository
 import domain.repositories.project.ProjectRepository
 import implicits.implicits._
 import infrastructure.gitlab.GitLabService
@@ -11,9 +15,20 @@ import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, ProjectGitLabDTO}
 import javax.inject.Inject
 import monix.eval.Task
 
-class ProjectService @Inject()(projectRepositoy: ProjectRepository, commitRepository: CommitRepository, gitLab: GitLabService) {
+class ProjectService @Inject()(grouppRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository, gitLab: GitLabService) {
 
   def getProject(proyectId: Int): Task[Either[GError, Project]] = projectRepositoy.findByIDEither(proyectId)
+
+  def registerGroup(name: String): EitherT[Task, GError, Group] = {
+    for {
+      g <- validateGroup(0, name)
+      r <- grouppRepository.insert(g).map(_.asRight[GError]).toEitherT
+    } yield r
+  }
+
+  def validateGroup(id: Int, name: String): EitherT[Task, GError, Group] = EitherT.fromEither {
+    Group(id, name, ZonedDateTime.now()).validar.leftMap(error => ValidationError("Validation error", "20000", error))
+  }
 
   def register(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
       _ <- projectRepositoy.validateNotExistProject(proyectId).toEitherT

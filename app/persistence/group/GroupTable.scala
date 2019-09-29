@@ -10,8 +10,8 @@ object GroupTable extends SlickImplicits {
 
   val groupsdb = TableQuery[GroupsRecord]
 
-  class GroupsRecord(tag: Tag)  extends Table[GroupRecord](tag, "group") {
-    def id = column[Int]("id", O.PrimaryKey)
+  class GroupsRecord(tag: Tag)  extends Table[GroupRecord](tag, "groups") {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
     def name = column[String]("name")
     def createdAt = column[ZonedDateTime]("created_at")

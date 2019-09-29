@@ -10,8 +10,9 @@ GET     /user-issues                controllers.HomeController.userIssuesClosed
 
 GET     /info-users                 controllers.ProjectController.infoUsers
 
-POST    /register-project           controllers.ProjectController.registerProject
-POST    /update-project             controllers.ProjectController.updateProject
+POST    /group/register             controllers.ProjectController.registerGroup
+POST    /project/register           controllers.ProjectController.registerProject
+POST    /project/update             controllers.ProjectController.updateProject
 
 
 # Map static resources from the /public folder to the /assets URL path

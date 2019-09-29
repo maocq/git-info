@@ -18,6 +18,7 @@
                 12101 Project no encontrado
             12200 Already exist
                 12201 Project exist
+                12202 Group exist
                 
         13000 Updating
 
