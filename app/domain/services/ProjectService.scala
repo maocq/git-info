@@ -31,9 +31,10 @@ class ProjectService @Inject()(grouppRepository: GroupRepository, projectReposit
   }
 
   def register(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
+      g <- grouppRepository.findByIDEither(groupId).toEitherT
       _ <- projectRepositoy.validateNotExistProject(proyectId).toEitherT
       d <- gitLab.getProject(proyectId).toEitherT
-      p <- transformProject(d, groupId)
+      p <- transformProject(d, g.id)
       r <- projectRepositoy.insertEither(p).toEitherT
     } yield r
 

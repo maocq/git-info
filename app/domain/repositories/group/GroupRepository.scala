@@ -12,6 +12,10 @@ class GroupRepository @Inject()(groupDAO: GroupDAO) extends GroupAdapter {
     groupDAO findByID id
   }.map(_ map transform)
 
+  def findByIDEither(id: Int): Task[Either[DomainError, Group]] = {
+    findByID(id).map(_.toRight(DomainError("Group not found", "12102")))
+  }
+
   def insert(group: Group): Task[Group] = Task.deferFuture {
     groupDAO insert transform(group)
   } map transform
