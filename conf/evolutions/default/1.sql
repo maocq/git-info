@@ -101,9 +101,37 @@ CREATE TABLE issues
     CONSTRAINT issue_assignee_user_id_fk FOREIGN KEY (assignee) REFERENCES users (id)
 );
 
+CREATE TABLE pull_request
+(
+    id INTEGER NOT NULL,
+    iid INTEGER NOT NULL,
+    project_id INTEGER NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    state VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    merged_by INTEGER,
+    merged_at TIMESTAMP WITH TIME ZONE,
+    closed_by INTEGER,
+    closed_at TIMESTAMP WITH TIME ZONE,
+    target_branch VARCHAR(100) NOT NULL,
+    source_branch VARCHAR(100) NOT NULL,
+    user_notes_count INTEGER NOT NULL,
+    upvotes INTEGER NOT NULL,
+    downvotes INTEGER NOT NULL,
+    author INTEGER NOT NULL,
+
+    CONSTRAINT pr_pk PRIMARY KEY (id),
+    CONSTRAINT pr_project_id_fk FOREIGN KEY (project_id) REFERENCES projects (id),
+    CONSTRAINT pr_merged_user_id_fk FOREIGN KEY (merged_by) REFERENCES users (id),
+    CONSTRAINT pr_closed_user_id_fk FOREIGN KEY (closed_by) REFERENCES users (id),
+    CONSTRAINT pr_author_user_id_fk FOREIGN KEY (author) REFERENCES users (id)
+);
 
 # --- !Downs
 
+DROP TABLE pull_request;
 DROP TABLE issues;
 DROP TABLE users;
 DROP TABLE diffs;

@@ -22,7 +22,7 @@ case class IssueGitLabDTO(
 )
 
 case class PRGitLabDTO(
-  id: Int, iid: Int, project_id: Int, title: String, description: String, state: String, created_at: ZonedDateTime, updated_at: ZonedDateTime,
+  id: Int, iid: Int, project_id: Int, title: String, description: Option[String], state: String, created_at: ZonedDateTime, updated_at: ZonedDateTime,
   merged_by: Option[UserGitLabDTO], merged_at: Option[ZonedDateTime], closed_by: Option[UserGitLabDTO], closed_at: Option[ZonedDateTime],
   target_branch: String, source_branch: String, user_notes_count: Int, upvotes: Int, downvotes: Int, author: UserGitLabDTO
 )
