@@ -8,14 +8,18 @@ import domain.model.GError.ValidationError
 import domain.model._
 import domain.repositories.commit.CommitRepository
 import domain.repositories.group.GroupRepository
+import domain.repositories.issue.IssueRepository
 import domain.repositories.project.ProjectRepository
 import implicits.implicits._
 import infrastructure.gitlab.GitLabService
-import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, ProjectGitLabDTO}
+import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, IssueGitLabDTO, ProjectGitLabDTO}
 import javax.inject.Inject
 import monix.eval.Task
 
-class ProjectService @Inject()(grouppRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository, gitLab: GitLabService) {
+class ProjectService @Inject()(
+  grouppRepository: GroupRepository, projectRepositoy: ProjectRepository,
+  commitRepository: CommitRepository, issueRepository: IssueRepository, gitLab: GitLabService
+) {
 
   def getProject(proyectId: Int): Task[Either[GError, Project]] = projectRepositoy.findByIDEither(proyectId)
 
@@ -26,10 +30,14 @@ class ProjectService @Inject()(grouppRepository: GroupRepository, projectReposit
     } yield r
   }
 
-  def registerIssues(projectId: Int) = {
+  def registerIssues(projectId: Int): EitherT[Task, GError, List[Issue]] = {
     for {
-      x <- projectRepositoy.findByIDEither(projectId).toEitherT
-    } yield x
+      _ <- projectRepositoy.findByIDEither(projectId).toEitherT
+      l <- issueRepository.getLastDateIssues(projectId).map(_.asRight[GError]).toEitherT
+      a <- gitLab.getAllIssues(projectId, l).toEitherT
+      i <- transformIssues(a)
+      r <- issueRepository.insertAll(i).map(_.asRight[GError]).toEitherT
+    } yield r
   }
 
   def registerProject(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
@@ -77,6 +85,11 @@ class ProjectService @Inject()(grouppRepository: GroupRepository, projectReposit
   private def transformCommits(dtos: List[CommitGitLabDTO], projectId: Int): EitherT[Task, GError, List[Commit]] = EitherT.fromEither {
     dtos.map(c => Commit(c.id, c.short_id, c.created_at, c.parent_ids.mkString(","), c.title, c.message, c.author_name,
       c.author_email, c.authored_date, c.committer_name, c.committer_email, c.committed_date, projectId)).asRight
+  }
+
+  private def transformIssues(dtos: List[IssueGitLabDTO]): EitherT[Task, GError, List[Issue]] = EitherT.fromEither {
+    dtos.map(i => Issue(i.id, i.iid, i.project_id, i.title, i.description, i.state, i.created_at, i.updated_at, i.closed_at,
+      i.closed_by.map(_.id), i.author.id, i.assignee.map(_.id), i.web_url)).asRight
   }
 
   def transformDiffs(diffs: List[(String, List[CommitDiffGitLabDTO])]): EitherT[Task, GError, List[Diff]] = EitherT.fromEither {

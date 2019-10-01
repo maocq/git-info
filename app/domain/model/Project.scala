@@ -40,3 +40,8 @@ case class Diff(
   id: Int, oldPath: String, newPath: String, aMode: String, bMode: String, newFile: Boolean,
   renamedFile: Boolean, deletedFile: Boolean, diff: String, additions: Int, deletions: Int, commitId: String
 )
+
+case class Issue(
+  id : Int, iid : Int, projectId : Int, title : String, description : Option[String], state : String, createdAt : ZonedDateTime, updatedAt : ZonedDateTime,
+  closedAt : Option[ZonedDateTime], closedBy : Option[Int], author : Int, assignee : Option[Int], webUrl : String
+)
