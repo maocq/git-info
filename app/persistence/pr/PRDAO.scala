@@ -6,7 +6,7 @@ import javax.inject.Inject
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 case class PRRecord(
   id: Int, iid: Int, projectId: Int, title: String, description: Option[String], state: String, createdAt: ZonedDateTime, updatedAt: ZonedDateTime,
@@ -14,7 +14,14 @@ case class PRRecord(
   targetBranch: String, sourceBranch: String, userNotesCount: Int, upvotes: Int, downvotes: Int, author: Int
 )
 
-class PTDAO  @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
+class PRDAO  @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
+
+  import profile.api._
+  import PRTable._
+
+  def getLastDatePRs(projectId: Int): Future[Option[ZonedDateTime]] = db.run {
+    prsdb.filter(_.projectId === projectId).sortBy(_.updatedAt.desc).map(_.updatedAt).take(1).result.headOption
+  }
 
 }

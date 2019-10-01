@@ -8,6 +8,8 @@ object PRTable extends SlickImplicits {
 
   import slick.jdbc.PostgresProfile.api._
 
+  val prsdb = TableQuery[PRsRecord]
+
   class PRsRecord(tag: Tag)  extends Table[PRRecord](tag, "pull_requests") {
     def id = column[Int]("id", O.PrimaryKey)
 
