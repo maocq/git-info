@@ -11,6 +11,7 @@
             11001 Error consultando proyecto
             11002 Error consultando commits
             11003 Error consultando diffs
+            11004 Error consultando issues
 
             
         12000 QueryError

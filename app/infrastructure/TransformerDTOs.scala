@@ -8,6 +8,7 @@ trait TransformerDTOs {
   implicit val commitGitLabDTOReads = Json.format[CommitGitLabDTO]
   implicit val commitDiffGitLabDTOReads = Json.format[CommitDiffGitLabDTO]
   implicit val userGitLabDTOGitLabDTOReads = Json.format[UserGitLabDTO]
-  implicit val mergeRequestDTOGitLabDTOReads = Json.format[MergeRequestDTO]
+  implicit val mergeRequestDTOGitLabDTOReads = Json.format[PRGitLabDTO]
+  implicit val issuesGitLabDTOReads = Json.format[IssueGitLabDTO]
 
 }

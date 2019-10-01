@@ -16,28 +16,20 @@ case class CommitDiffGitLabDTO(old_path: String, new_path: String, a_mode: Strin
 
 case class UserGitLabDTO(id: Int, name: String, username: String, state: String, avatar_url: String, web_url: String)
 
-case class MergeRequestDTO(
-  id: Int,
-  iid: Int,
-  project_id: Int,
-  title: String,
-  description: String,
-  state: String,
-  created_at: ZonedDateTime,
-  updated_at: ZonedDateTime,
-  merged_by: Option[UserGitLabDTO],
-  merged_at: Option[ZonedDateTime],
-  closed_by: Option[UserGitLabDTO],
-  closed_at: Option[ZonedDateTime],
-  target_branch: String,
-  source_branch: String,
-  user_notes_count: String,
-  upvotes: String,
-  downvotes: String
-  /*
+case class IssueGitLabDTO(
+  id : Int, iid : Int, project_id : Int, title : String, description : Option[String], state : String, created_at : ZonedDateTime, updated_at : ZonedDateTime,
+  closed_at : Option[ZonedDateTime], closed_by : Option[UserGitLabDTO], author : UserGitLabDTO, assignee : Option[UserGitLabDTO], web_url : String
+)
+
+case class PRGitLabDTO(
+  id: Int, iid: Int, project_id: Int, title: String, description: String, state: String, created_at: ZonedDateTime, updated_at: ZonedDateTime,
+  merged_by: Option[UserGitLabDTO], merged_at: Option[ZonedDateTime], closed_by: Option[UserGitLabDTO], closed_at: Option[ZonedDateTime],
+  target_branch: String, source_branch: String, user_notes_count: Int, upvotes: Int, downvotes: Int, author: UserGitLabDTO
+)
+
+/*
 assignee: Option[UserGitLabDTO],
-author: UserGitLabDTO,
+,
 source_project_id: Int,
 target_project_id: Int
 */
-)

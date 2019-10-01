@@ -8,6 +8,7 @@ import cats.implicits._
 import infrastructure.TransformerDTOsHTTP
 import infrastructure.gitlab.GitLabService
 import javax.inject._
+import monix.execution.Scheduler
 import persistence.diff.DiffDAO
 import persistence.project.{GitLabDB, IssueState}
 import play.api.libs.json.Json
@@ -21,7 +22,15 @@ case class IssuesForStatus(status: String, infoIssue: List[IssueState])
 class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, gitLab: GitLabDB, s: DiffDAO)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOsHTTP {
 
+  //implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
+
   def index() = Action { implicit request: Request[AnyContent] =>
+    /*
+    gitLabService.getAllCommits(222, None).runToFuture.recover{case es =>
+      es.toString}.foreach(e =>
+      println(e))
+     */
+
     s.test1().recover{case es => es.toString}.foreach(e => println(e))
     //gitLabService.getMergeRequest(174, 1).map(s => s.toString).recover{case es => es.toString}.foreach(e => println(e))
     Ok(views.html.index())
