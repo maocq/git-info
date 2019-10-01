@@ -20,7 +20,7 @@ class RegisterProjectCommand @Inject()(projectService: ProjectService) extends C
 
   def execute(dto: ProjectIDDTO): Task[Consequence] = {
     (for {
-      x <- projectService.register(dto.id, dto.groupId)
+      x <- projectService.registerProject(dto.id, dto.groupId)
       _ <- updateInfoProject(dto.id).toEitherT
     } yield x)
       .fold(leftConsequence, r => rightConsequence(Json.toJson(r)))

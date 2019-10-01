@@ -4,8 +4,8 @@ import java.time.ZonedDateTime
 
 import cats.data.EitherT
 import cats.implicits._
-import domain.model.GError.{DomainError, ValidationError}
-import domain.model.{Commit, Diff, GError, Group, Project}
+import domain.model.GError.ValidationError
+import domain.model._
 import domain.repositories.commit.CommitRepository
 import domain.repositories.group.GroupRepository
 import domain.repositories.project.ProjectRepository
@@ -26,11 +26,13 @@ class ProjectService @Inject()(grouppRepository: GroupRepository, projectReposit
     } yield r
   }
 
-  def validateGroup(id: Int, name: String): EitherT[Task, GError, Group] = EitherT.fromEither {
-    Group(id, name, ZonedDateTime.now()).validar.leftMap(error => ValidationError("Validation error", "20000", error))
+  def registerIssues(projectId: Int) = {
+    for {
+      x <- projectRepositoy.findByIDEither(projectId).toEitherT
+    } yield x
   }
 
-  def register(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
+  def registerProject(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
       g <- grouppRepository.findByIDEither(groupId).toEitherT
       _ <- projectRepositoy.validateNotExistProject(proyectId).toEitherT
       d <- gitLab.getProject(proyectId).toEitherT
@@ -53,6 +55,10 @@ class ProjectService @Inject()(grouppRepository: GroupRepository, projectReposit
 
   def finishUpdating(projectId: Int): Task[Either[GError, Int]] = {
     projectRepositoy.offUpdating(projectId)
+  }
+
+  private def validateGroup(id: Int, name: String): EitherT[Task, GError, Group] = EitherT.fromEither {
+    Group(id, name, ZonedDateTime.now()).validar.leftMap(error => ValidationError("Validation error", "20000", error))
   }
 
   private def filterCommits(commits: List[Commit]): Task[List[Commit]] = {

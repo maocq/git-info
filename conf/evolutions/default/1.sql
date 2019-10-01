@@ -76,11 +76,35 @@ CREATE TABLE users
     web_url VARCHAR(250) NOT NULL,
 
     CONSTRAINT user_pk PRIMARY KEY (id)
-)
+);
+
+CREATE TABLE issues
+(
+    id INTEGER NOT NULL,
+    iid INTEGER NOT NULL,
+    project_id INTEGER NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    state VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    closed_at TIMESTAMP WITH TIME ZONE,
+    closed_by INTEGER,
+    author INTEGER NOT NULL,
+    assignee INTEGER,
+    web_url VARCHAR(500) NOT NULL,
+
+    CONSTRAINT issue_pk PRIMARY KEY (id),
+    CONSTRAINT issue_project_id_fk FOREIGN KEY (project_id) REFERENCES projects (id),
+    CONSTRAINT issue_closed_user_id_fk FOREIGN KEY (closed_by) REFERENCES users (id),
+    CONSTRAINT issue_author_user_id_fk FOREIGN KEY (author) REFERENCES users (id),
+    CONSTRAINT issue_assignee_user_id_fk FOREIGN KEY (assignee) REFERENCES users (id)
+);
 
 
 # --- !Downs
 
+DROP TABLE issues;
 DROP TABLE users;
 DROP TABLE diffs;
 DROP TABLE commits;
