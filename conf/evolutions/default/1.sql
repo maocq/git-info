@@ -101,7 +101,7 @@ CREATE TABLE issues
     CONSTRAINT issue_assignee_user_id_fk FOREIGN KEY (assignee) REFERENCES users (id)
 );
 
-CREATE TABLE pull_request
+CREATE TABLE pull_requests
 (
     id INTEGER NOT NULL,
     iid INTEGER NOT NULL,
@@ -131,7 +131,7 @@ CREATE TABLE pull_request
 
 # --- !Downs
 
-DROP TABLE pull_request;
+DROP TABLE pull_requests;
 DROP TABLE issues;
 DROP TABLE users;
 DROP TABLE diffs;
