@@ -59,7 +59,7 @@ class ProjectService @Inject()(
       l <- issueRepository.getLastDateIssues(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllIssues(projectId, l).toEitherT
       i <- transformIssues(a)
-      _ <- registerUserGit(i)
+      _ <- registerUserGitIssues(i)
       r <- issueRepository.insertOrUpdateAll(i).map(_.asRight[GError]).toEitherT
     } yield r
   }
@@ -118,9 +118,9 @@ class ProjectService @Inject()(
     })).asRight
   }
 
-  private def registerUserGit(issues: List[Issue]): EitherT[Task, GError, List[UserGit]] = {
+  private def registerUserGitIssues(issues: List[Issue]): EitherT[Task, GError, List[UserGit]] = {
     for {
-      u <- getUsersToRegister(issues).map(_.asRight[GError]).toEitherT
+      u <- getUsersToRegisterIssues(issues).map(_.asRight[GError]).toEitherT
       i <- getInfoUsers(u).toEitherT
       t <- transformUsers(i)
       r <- registerUsersGit(t).map(_.asRight[GError]).toEitherT
@@ -136,7 +136,7 @@ class ProjectService @Inject()(
     } yield r
   }
 
-  private def getUsersToRegister(issues: List[Issue]): Task[List[Int]] = {
+  private def getUsersToRegisterIssues(issues: List[Issue]): Task[List[Int]] = {
     val users = getUsersOfIssues(issues)
     getUnregisteredUsers(users)
   }
