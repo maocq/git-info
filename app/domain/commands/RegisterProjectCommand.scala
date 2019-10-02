@@ -28,7 +28,7 @@ class RegisterProjectCommand @Inject()(projectService: ProjectService) extends C
 
   def updateInfoProject(projectID: Int) = {
     Task.eval {
-      projectService.registerCommits(projectID)
+      projectService.updateInfoProject(projectID)
         .fold(l => {if(l.errrorCode != "13000") projectService.finishUpdating(projectID).runToFuture;Json.toJson(l)}, Json.toJson(_))
         .foreach(i => logger.info(s"Response: $i"))
 

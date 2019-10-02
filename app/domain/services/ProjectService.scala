@@ -40,6 +40,12 @@ class ProjectService @Inject()(
       r <- projectRepositoy.insertEither(p).toEitherT
     } yield r
 
+  def updateInfoProject(projectId: Int): EitherT[Task, GError, ((List[Commit], List[Diff]), List[Issue], List[PR])] = for {
+      c <- registerCommits(projectId)
+      i <- registerIssues(projectId)
+      p <- registerPRs(projectId)
+    } yield (c, i, p)
+
   def registerCommits(projectId: Int): EitherT[Task, GError, (List[Commit], List[Diff])] = for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       _ <- projectRepositoy.onUpdating(projectId).toEitherT
@@ -53,8 +59,7 @@ class ProjectService @Inject()(
       _ <- projectRepositoy.offUpdating(projectId).toEitherT
     } yield r
 
-  def registerIssues(projectId: Int): EitherT[Task, GError, List[Issue]] = {
-    for {
+  def registerIssues(projectId: Int): EitherT[Task, GError, List[Issue]] = for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       l <- issueRepository.getLastDateIssues(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllIssues(projectId, l).toEitherT
@@ -62,10 +67,8 @@ class ProjectService @Inject()(
       _ <- registerUserGitIssues(i)
       r <- issueRepository.insertOrUpdateAll(i).map(_.asRight[GError]).toEitherT
     } yield r
-  }
 
-  def registerPRs(projectId: Int): EitherT[Task, GError, List[PR]] = {
-    for {
+  def registerPRs(projectId: Int): EitherT[Task, GError, List[PR]] = for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       l <- prRepository.getLastDatePRs(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllPRs(projectId, l).toEitherT
@@ -73,7 +76,6 @@ class ProjectService @Inject()(
       _ <- registerUserGitPRs(p)
       r <- prRepository.insertOrUpdateAll(p).map(_.asRight[GError]).toEitherT
     } yield r
-  }
 
   def finishUpdating(projectId: Int): Task[Either[GError, Int]] = {
     projectRepositoy.offUpdating(projectId)

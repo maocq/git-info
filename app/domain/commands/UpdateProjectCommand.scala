@@ -27,8 +27,8 @@ class UpdateProjectCommand @Inject()(projectService: ProjectService) extends Com
 
   def updateInfoProject(projectID: Int) = {
     Task.eval {
-      projectService.registerCommits(projectID)
-        .fold(l => {if(l.errrorCode != "13000") projectService.finishUpdating(projectID).runToFuture;Json.toJson(l)}, Json.toJson(_))
+      projectService.updateInfoProject(projectID)
+        .fold(l => {if(l.errrorCode != "13000") projectService.finishUpdating(projectID).runToFuture; Json.toJson(l)}, Json.toJson(_))
         .foreach(i => logger.info(s"Response: $i"))
 
       MessageDTO("Updating info").asRight[GError]
