@@ -30,6 +30,7 @@ class RegisterProjectCommand @Inject()(projectService: ProjectService) extends C
     Task.eval {
       projectService.updateInfoProject(projectID)
         .fold(l => {if(l.errrorCode != "13000") projectService.finishUpdating(projectID).runToFuture;Json.toJson(l)}, Json.toJson(_))
+        .recover{case error => projectService.finishUpdating(projectID).runToFuture; Json.toJson(error.getMessage)}
         .foreach(i => logger.info(s"Response: $i"))
 
       MessageDTO("Updating info").asRight[GError]

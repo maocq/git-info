@@ -21,8 +21,8 @@ CREATE TABLE projects
     ssh_url_to_repo VARCHAR(250) NOT NULL,
     http_url_to_repo VARCHAR(250) NOT NULL,
     web_url VARCHAR(250) NOT NULL,
-    updating BOOLEAN NOT NULL DEFAULT FALSE,
     group_id INTEGER NOT NULL,
+    updating BOOLEAN NOT NULL DEFAULT FALSE,
 
     CONSTRAINT project_pk PRIMARY KEY (id),
     CONSTRAINT project_group_id_fk FOREIGN KEY (group_id) REFERENCES groups (id)
@@ -35,7 +35,7 @@ CREATE TABLE commits
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     parent_ids VARCHAR(250) NOT NULL,
     title VARCHAR(250) NOT NULL,
-    message VARCHAR(500) NOT NULL,
+    message TEXT NOT NULL,
     author_name VARCHAR(250) NOT NULL,
     author_email VARCHAR(250) NOT NULL,
     authored_date TIMESTAMP WITH TIME ZONE NOT NULL,
