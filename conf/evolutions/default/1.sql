@@ -34,7 +34,7 @@ CREATE TABLE commits
     short_id VARCHAR(50) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     parent_ids VARCHAR(250) NOT NULL,
-    title VARCHAR(250) NOT NULL,
+    title VARCHAR(500) NOT NULL,
     message TEXT NOT NULL,
     author_name VARCHAR(250) NOT NULL,
     author_email VARCHAR(250) NOT NULL,
