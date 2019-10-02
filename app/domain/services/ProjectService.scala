@@ -13,7 +13,7 @@ import domain.repositories.project.ProjectRepository
 import domain.repositories.user.UserRepository
 import implicits.implicits._
 import infrastructure.gitlab.GitLabService
-import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, IssueGitLabDTO, ProjectGitLabDTO}
+import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, IssueGitLabDTO, ProjectGitLabDTO, UserGitLabDTO}
 import javax.inject.Inject
 import monix.eval.Task
 
@@ -31,23 +31,15 @@ class ProjectService @Inject()(
     } yield r
   }
 
-  def registerIssues(projectId: Int) = {
+  def registerIssues(projectId: Int): EitherT[Task, GError, List[Issue]] = {
     for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       l <- issueRepository.getLastDateIssues(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllIssues(projectId, l).toEitherT
       i <- transformIssues(a)
-      _ <- registerUser(i).map(_.asRight[GError]).toEitherT
+      _ <- registerUserGit(i)
       r <- issueRepository.insertOrUpdateAll(i).map(_.asRight[GError]).toEitherT
     } yield r
-  }
-
-  def registerUser(issues: List[Issue]): Task[List[UserGit]] = {
-    val authors = issues.map(_.author)
-    val assignee = issues.map(_.assignee).filter(_.isDefined).map(_.get)
-    val closedBy = issues.map(_.closedBy).filter(_.isDefined).map(_.get)
-    val users = (authors ::: assignee ::: closedBy).distinct
-    Task.traverse(users){user => userRepository.insertIfNotExist(UserGit(user, "", "", "", ""))}
   }
 
   def registerProject(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
@@ -102,11 +94,50 @@ class ProjectService @Inject()(
       i.closed_by.map(_.id), i.author.id, i.assignee.map(_.id), i.web_url)).asRight
   }
 
-  def transformDiffs(diffs: List[(String, List[CommitDiffGitLabDTO])]): EitherT[Task, GError, List[Diff]] = EitherT.fromEither {
+  private def transformDiffs(diffs: List[(String, List[CommitDiffGitLabDTO])]): EitherT[Task, GError, List[Diff]] = EitherT.fromEither {
     diffs.flatMap(list => list._2.map(d => {
       val lines = d.diff.split("\n");
       Diff(0, d.old_path, d.new_path, d.a_mode, d.b_mode, d.new_file, d.renamed_file, d.deleted_file, d.diff, lines.count(_.startsWith("+")), lines.count(_.startsWith("-")), list._1)
     })).asRight
+  }
+
+  private def registerUserGit(issues: List[Issue]): EitherT[Task, GError, List[UserGit]] = {
+    for {
+      u <- getUsersToRegister(issues).map(_.asRight[GError]).toEitherT
+      i <- getInfoUsers(u).toEitherT
+      t <- transformUsers(i)
+      r <- registerUsersGit(t).map(_.asRight[GError]).toEitherT
+    } yield r
+  }
+
+  private def getUsersToRegister(issues: List[Issue]): Task[List[Int]] = {
+    val users = getUsersOfIssues(issues)
+    getUnregisteredUsers(users)
+  }
+
+  private def getUsersOfIssues(issues: List[Issue]): List[Int] = {
+    (issues.map(_.author)
+      ::: issues.map(_.assignee).filter(_.isDefined).map(_.get)
+      ::: issues.map(_.closedBy).filter(_.isDefined).map(_.get)).distinct
+  }
+
+  private def getUnregisteredUsers(users: List[Int]): Task[List[Int]] = {
+    userRepository.getRegisteredUsers(users).map(registers => {
+      val idsRegisters = registers.map(_.id)
+      users.filter(!idsRegisters.contains(_))
+    })
+  }
+
+  private def getInfoUsers(users: List[Int]): Task[Either[GError, List[UserGitLabDTO]]] = {
+    Task.traverse(users)(user => gitLab.getUser(user)).map{_.sequence}
+  }
+
+  private def transformUsers(dtos: List[UserGitLabDTO]): EitherT[Task, GError, List[UserGit]] = EitherT.fromEither {
+    dtos.map(u => UserGit(u.id, u.name, u.username, u.avatar_url, u.web_url)).asRight
+  }
+
+  private def registerUsersGit(users: List[UserGit]): Task[List[UserGit]] = {
+    Task.traverse(users)(userRepository.insert(_))
   }
 
   def traverseFold[L, R, T](elements: List[T])(f: T => Task[Either[L, R]]): EitherT[Task, L, List[R]] = {
@@ -114,5 +145,4 @@ class ProjectService @Inject()(
       (acc, nxt) => acc.flatMap(list => EitherT(f(nxt)).map(list :+ _))
     }
   }
-
 }

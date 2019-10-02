@@ -7,8 +7,16 @@ import persistence.user.UserDAO
 
 class UserRepository @Inject()(userDAO: UserDAO) extends UserAdapter {
 
+  def insert(userGit: UserGit): Task[UserGit] = Task.deferFuture {
+    userDAO insert transform(userGit)
+  } map transform
+
   def insertIfNotExist(userGit: UserGit): Task[UserGit] = Task.deferFuture {
     userDAO insertIfNotExist transform(userGit)
   } map transform
+
+  def getRegisteredUsers(users: List[Int]): Task[List[UserGit]] = Task.deferFuture {
+    userDAO getRegisteredUsers users
+  }.map(_.map(transform).toList)
 
 }

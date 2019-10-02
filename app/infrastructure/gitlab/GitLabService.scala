@@ -44,6 +44,11 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
   }.map(_.bimap(l => DomainError(l.error, "11004"), _.response))
     .recover{case error => DomainError(error.getMessage, "11000").asLeft}
 
+  def getUser(id: Int): Task[Either[GError, UserGitLabDTO]] = Task.deferFuture {
+    http.get[UserGitLabDTO](s"https://gitlab.seven4n.com/api/v4/users/$id",
+      Map("Private-Token" -> "saz8spC5AyehUEismJW4"))
+  }.map(_.bimap(l => DomainError(s"User not exist - ${l.error}", "11003"), _.response))
+    .recover{case error => DomainError(error.getMessage, "11000").asLeft}
 
   private def getAllCommits(id: Int, page: Int, lista: List[CommitGitLabDTO], date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] ={
     getCommits(id, page, date).flatMap {

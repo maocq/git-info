@@ -18,6 +18,7 @@
             12100 Not exist
                 12101 Project no encontrado
                 12102 Grupo no encontrado
+                12103 Usuario no encontrado
             12200 Already exist
                 12201 Project exist
                 12202 Group exist

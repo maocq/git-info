@@ -29,6 +29,10 @@ class UserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     )
   }
 
+  def getRegisteredUsers(users: List[Int]): Future[Seq[UserGitRecord]] = db.run {
+    usersdb.filter(_.id.inSet(users)).result
+  }
+
   def insertOrUpdate(userRecord: UserGitRecord): Future[Option[UserGitRecord]] = db.run {
     (usersdb returning usersdb) insertOrUpdate userRecord
   }
