@@ -45,3 +45,5 @@ case class Issue(
   id : Int, iid : Int, projectId : Int, title : String, description : Option[String], state : String, createdAt : ZonedDateTime, updatedAt : ZonedDateTime,
   closedAt : Option[ZonedDateTime], closedBy : Option[Int], author : Int, assignee : Option[Int], webUrl : String
 )
+
+case class UserGit(id: Int, name: String, username: String, avatarUrl: String, webUrl: String)

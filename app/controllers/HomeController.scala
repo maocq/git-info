@@ -27,7 +27,7 @@ class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabSe
 
   def index() = Action { implicit request: Request[AnyContent] =>
 
-    p.registerIssues(674).value.runToFuture.recover{case es =>
+    p.registerIssues(222).value.runToFuture.recover{case es =>
       es.toString
     }.foreach(e =>
       println(e)

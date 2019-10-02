@@ -10,6 +10,7 @@ import domain.repositories.commit.CommitRepository
 import domain.repositories.group.GroupRepository
 import domain.repositories.issue.IssueRepository
 import domain.repositories.project.ProjectRepository
+import domain.repositories.user.UserRepository
 import implicits.implicits._
 import infrastructure.gitlab.GitLabService
 import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, IssueGitLabDTO, ProjectGitLabDTO}
@@ -17,8 +18,8 @@ import javax.inject.Inject
 import monix.eval.Task
 
 class ProjectService @Inject()(
-  grouppRepository: GroupRepository, projectRepositoy: ProjectRepository,
-  commitRepository: CommitRepository, issueRepository: IssueRepository, gitLab: GitLabService
+  grouppRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository,
+  issueRepository: IssueRepository, userRepository: UserRepository, gitLab: GitLabService
 ) {
 
   def getProject(proyectId: Int): Task[Either[GError, Project]] = projectRepositoy.findByIDEither(proyectId)
@@ -36,8 +37,17 @@ class ProjectService @Inject()(
       l <- issueRepository.getLastDateIssues(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllIssues(projectId, l).toEitherT
       i <- transformIssues(a)
+      _ <- registerUser(i).map(_.asRight[GError]).toEitherT
       r <- issueRepository.insertOrUpdateAll(i).map(_.asRight[GError]).toEitherT
     } yield r
+  }
+
+  def registerUser(issues: List[Issue]): Task[List[UserGit]] = {
+    val authors = issues.map(_.author)
+    val assignee = issues.map(_.assignee).filter(_.isDefined).map(_.get)
+    val closedBy = issues.map(_.closedBy).filter(_.isDefined).map(_.get)
+    val users = (authors ::: assignee ::: closedBy).distinct
+    Task.traverse(users){user => userRepository.insertIfNotExist(UserGit(user, "", "", "", ""))}
   }
 
   def registerProject(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {

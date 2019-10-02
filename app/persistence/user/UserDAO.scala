@@ -25,7 +25,7 @@ class UserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
 
   def insertIfNotExist(userRecord: UserGitRecord): Future[UserGitRecord] = {
     findByID(userRecord).flatMap(option =>
-      option.map(record => insert(record)).getOrElse(Future.successful(userRecord))
+      option.map(record => Future.successful(record)).getOrElse(insert(userRecord))
     )
   }
 
