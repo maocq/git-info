@@ -49,3 +49,13 @@ curl -X POST \
   "groupId": 1
 }'
 ~~~~
+
+~~~~
+curl -X POST \
+  http://localhost:9000/project/update \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "id" : 586,
+  "groupId": 1
+}'
+~~~~
