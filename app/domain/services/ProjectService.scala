@@ -30,13 +30,13 @@ class ProjectService @Inject()(
     } yield r
   }
 
-  def registerIssues(projectId: Int): EitherT[Task, GError, List[Issue]] = {
+  def registerIssues(projectId: Int) = {
     for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       l <- issueRepository.getLastDateIssues(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllIssues(projectId, l).toEitherT
       i <- transformIssues(a)
-      r <- issueRepository.insertAll(i).map(_.asRight[GError]).toEitherT
+      r <- issueRepository.insertOrUpdateAll(i).map(_.asRight[GError]).toEitherT
     } yield r
   }
 
@@ -79,7 +79,7 @@ class ProjectService @Inject()(
 
   private def transformProject(dto: ProjectGitLabDTO, groupId: Int): EitherT[Task, GError, Project] = EitherT.fromEither {
     Project(dto.id, dto.description, dto.name, dto.name_with_namespace, dto.path, dto.path_with_namespace,
-      dto.created_at, dto.default_branch, dto.ssh_url_to_repo, dto.http_url_to_repo, dto.web_url, groupId).asRight
+      dto.created_at, dto.default_branch.getOrElse(""), dto.ssh_url_to_repo, dto.http_url_to_repo, dto.web_url, groupId).asRight
   }
 
   private def transformCommits(dtos: List[CommitGitLabDTO], projectId: Int): EitherT[Task, GError, List[Commit]] = EitherT.fromEither {

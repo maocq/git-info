@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit
 
 import cats.data.EitherT
 import cats.implicits._
+import domain.services.ProjectService
 import infrastructure.TransformerDTOsHTTP
 import infrastructure.gitlab.GitLabService
 import javax.inject._
@@ -19,12 +20,19 @@ import scala.concurrent.{ExecutionContext, Future}
 case class IssuesForStatus(status: String, infoIssue: List[IssueState])
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, gitLab: GitLabDB, s: DiffDAO)(implicit ec: ExecutionContext)
+class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, gitLab: GitLabDB, s: DiffDAO, p: ProjectService)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOsHTTP {
 
-  //implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
+  implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
 
   def index() = Action { implicit request: Request[AnyContent] =>
+
+    p.registerIssues(674).value.runToFuture.recover{case es =>
+      es.toString
+    }.foreach(e =>
+      println(e)
+    )
+
     /*
     gitLabService.getAllCommits(222, None).runToFuture.recover{case es =>
       es.toString}.foreach(e =>

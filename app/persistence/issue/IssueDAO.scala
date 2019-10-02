@@ -19,16 +19,21 @@ class IssueDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider
   import IssueTable._
   import profile.api._
 
-  def insertAllDBIO(issuesRecord: List[IssueRecord]): DBIO[List[IssueRecord]] = {
-    DBIO.sequence(issuesRecord.map(i => (issuesdb returning issuesdb) += i))
-  }
-
-  def insertAll(issuesRecord: List[IssueRecord]): Future[List[IssueRecord]] = db.run {
-    insertAllDBIO(issuesRecord).transactionally
+  def findByID(issuesRecord: IssueRecord): Future[Option[IssueRecord]] = db.run {
+    issuesdb.filter(u => u.id === issuesRecord.id).result.headOption
   }
 
   def getLastDateIssues(projectId: Int): Future[Option[ZonedDateTime]] = db.run {
     issuesdb.filter(_.projectId === projectId).sortBy(_.updatedAt.desc).map(_.updatedAt).take(1).result.headOption
   }
 
+  def insertOrUpdateAll(issuesRecord: List[IssueRecord]): Future[List[IssueRecord]] = db.run {
+    (for {
+      s <- insertOrUpdateSeq(issuesRecord)
+    } yield issuesRecord).transactionally
+  }
+
+  private def insertOrUpdateSeq(issuesRecord: List[IssueRecord]): DBIO[List[Option[IssueRecord]]] = {
+    DBIO.sequence(issuesRecord.map(i => (issuesdb returning issuesdb).insertOrUpdate(i) ))
+  }
 }
