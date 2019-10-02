@@ -9,17 +9,18 @@ import domain.model._
 import domain.repositories.commit.CommitRepository
 import domain.repositories.group.GroupRepository
 import domain.repositories.issue.IssueRepository
+import domain.repositories.pr.PRRepository
 import domain.repositories.project.ProjectRepository
 import domain.repositories.user.UserRepository
 import implicits.implicits._
 import infrastructure.gitlab.GitLabService
-import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, IssueGitLabDTO, ProjectGitLabDTO, UserGitLabDTO}
+import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, IssueGitLabDTO, PRGitLabDTO, ProjectGitLabDTO, UserGitLabDTO}
 import javax.inject.Inject
 import monix.eval.Task
 
 class ProjectService @Inject()(
   grouppRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository,
-  issueRepository: IssueRepository, userRepository: UserRepository, gitLab: GitLabService
+  issueRepository: IssueRepository, prRepository: PRRepository, userRepository: UserRepository, gitLab: GitLabService
 ) {
 
   def getProject(proyectId: Int): Task[Either[GError, Project]] = projectRepositoy.findByIDEither(proyectId)
@@ -63,10 +64,14 @@ class ProjectService @Inject()(
     } yield r
   }
 
-  def registerPRs(projectId: Int) = {
+  def registerPRs(projectId: Int): EitherT[Task, GError, List[PR]] = {
     for {
-      r <- projectRepositoy.findByIDEither(projectId).toEitherT
-
+      _ <- projectRepositoy.findByIDEither(projectId).toEitherT
+      l <- prRepository.getLastDatePRs(projectId).map(_.asRight[GError]).toEitherT
+      a <- gitLab.getAllPRs(projectId, l).toEitherT
+      p <- transformPRs(a)
+      _ <- registerUserGitPRs(p)
+      r <- prRepository.insertOrUpdateAll(p).map(_.asRight[GError]).toEitherT
     } yield r
   }
 
@@ -101,6 +106,11 @@ class ProjectService @Inject()(
       i.closed_by.map(_.id), i.author.id, i.assignee.map(_.id), i.web_url)).asRight
   }
 
+  private def transformPRs(dtos: List[PRGitLabDTO]): EitherT[Task, GError, List[PR]] = EitherT.fromEither {
+    dtos.map(p => PR(p.id, p.iid, p.project_id, p.title, p.description, p.state, p.created_at, p.updated_at, p.merged_by.map(f => f.id), p.merged_at,
+      p.closed_by.map(f => f.id), p.closed_at, p.target_branch, p.source_branch, p.user_notes_count, p.upvotes, p.downvotes, p.author.id)).asRight
+  }
+
   private def transformDiffs(diffs: List[(String, List[CommitDiffGitLabDTO])]): EitherT[Task, GError, List[Diff]] = EitherT.fromEither {
     diffs.flatMap(list => list._2.map(d => {
       val lines = d.diff.split("\n");
@@ -117,8 +127,22 @@ class ProjectService @Inject()(
     } yield r
   }
 
+  private def registerUserGitPRs(prs: List[PR]): EitherT[Task, GError, List[UserGit]] = {
+    for {
+      u <- getUsersToRegisterPRS(prs).map(_.asRight[GError]).toEitherT
+      i <- getInfoUsers(u).toEitherT
+      t <- transformUsers(i)
+      r <- registerUsersGit(t).map(_.asRight[GError]).toEitherT
+    } yield r
+  }
+
   private def getUsersToRegister(issues: List[Issue]): Task[List[Int]] = {
     val users = getUsersOfIssues(issues)
+    getUnregisteredUsers(users)
+  }
+
+  private def getUsersToRegisterPRS(prs: List[PR]): Task[List[Int]] = {
+    val users = getUsersOfPRs(prs)
     getUnregisteredUsers(users)
   }
 
@@ -126,6 +150,12 @@ class ProjectService @Inject()(
     (issues.map(_.author)
       ::: issues.map(_.assignee).filter(_.isDefined).map(_.get)
       ::: issues.map(_.closedBy).filter(_.isDefined).map(_.get)).distinct
+  }
+
+  private def getUsersOfPRs(prs: List[PR]): List[Int] = {
+    (prs.map(_.author)
+      ::: prs.map(_.mergedBy).filter(_.isDefined).map(_.get)
+      ::: prs.map(_.closedBy).filter(_.isDefined).map(_.get)).distinct
   }
 
   private def getUnregisteredUsers(users: List[Int]): Task[List[Int]] = {

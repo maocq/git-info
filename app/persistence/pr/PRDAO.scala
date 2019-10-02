@@ -24,4 +24,13 @@ class PRDAO  @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
     prsdb.filter(_.projectId === projectId).sortBy(_.updatedAt.desc).map(_.updatedAt).take(1).result.headOption
   }
 
+  def insertOrUpdateAll(prsRecord: List[PRRecord]): Future[List[PRRecord]] = db.run {
+    (for {
+      p <- insertOrUpdateSeq(prsRecord)
+    } yield prsRecord).transactionally
+  }
+
+  private def insertOrUpdateSeq(prsRecord: List[PRRecord]): DBIO[List[Option[PRRecord]]] = {
+    DBIO.sequence(prsRecord.map(p => (prsdb returning prsdb).insertOrUpdate(p) ))
+  }
 }
