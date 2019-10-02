@@ -19,6 +19,14 @@ class UserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     (usersdb returning usersdb) += userRecord
   }
 
+  def insertAllDBIO(usersRecord: List[UserGitRecord]): DBIO[List[UserGitRecord]] = {
+    DBIO.sequence(usersRecord.map(c => (usersdb returning usersdb) += c))
+  }
+
+  def insertAll(usersRecord: List[UserGitRecord]): Future[List[UserGitRecord]] = db.run {
+    insertAllDBIO(usersRecord).transactionally
+  }
+
   def findByID(userRecord: UserGitRecord): Future[Option[UserGitRecord]] = db.run {
     usersdb.filter(u => u.id === userRecord.id).result.headOption
   }

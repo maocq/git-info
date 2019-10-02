@@ -31,17 +31,6 @@ class ProjectService @Inject()(
     } yield r
   }
 
-  def registerIssues(projectId: Int): EitherT[Task, GError, List[Issue]] = {
-    for {
-      _ <- projectRepositoy.findByIDEither(projectId).toEitherT
-      l <- issueRepository.getLastDateIssues(projectId).map(_.asRight[GError]).toEitherT
-      a <- gitLab.getAllIssues(projectId, l).toEitherT
-      i <- transformIssues(a)
-      _ <- registerUserGit(i)
-      r <- issueRepository.insertOrUpdateAll(i).map(_.asRight[GError]).toEitherT
-    } yield r
-  }
-
   def registerProject(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
       g <- grouppRepository.findByIDEither(groupId).toEitherT
       _ <- projectRepositoy.validateNotExistProject(proyectId).toEitherT
@@ -62,6 +51,24 @@ class ProjectService @Inject()(
       r <- projectRepositoy.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
       _ <- projectRepositoy.offUpdating(projectId).toEitherT
     } yield r
+
+  def registerIssues(projectId: Int): EitherT[Task, GError, List[Issue]] = {
+    for {
+      _ <- projectRepositoy.findByIDEither(projectId).toEitherT
+      l <- issueRepository.getLastDateIssues(projectId).map(_.asRight[GError]).toEitherT
+      a <- gitLab.getAllIssues(projectId, l).toEitherT
+      i <- transformIssues(a)
+      _ <- registerUserGit(i)
+      r <- issueRepository.insertOrUpdateAll(i).map(_.asRight[GError]).toEitherT
+    } yield r
+  }
+
+  def registerPRs(projectId: Int) = {
+    for {
+      r <- projectRepositoy.findByIDEither(projectId).toEitherT
+
+    } yield r
+  }
 
   def finishUpdating(projectId: Int): Task[Either[GError, Int]] = {
     projectRepositoy.offUpdating(projectId)
@@ -136,9 +143,7 @@ class ProjectService @Inject()(
     dtos.map(u => UserGit(u.id, u.name, u.username, u.avatar_url, u.web_url)).asRight
   }
 
-  private def registerUsersGit(users: List[UserGit]): Task[List[UserGit]] = {
-    Task.traverse(users)(userRepository.insert(_))
-  }
+  private def registerUsersGit(users: List[UserGit]): Task[List[UserGit]] = userRepository.insertAll(users)
 
   def traverseFold[L, R, T](elements: List[T])(f: T => Task[Either[L, R]]): EitherT[Task, L, List[R]] = {
     elements.foldLeft(EitherT(Task.now(List.empty[R].asRight[L]))) {

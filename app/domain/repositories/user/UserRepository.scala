@@ -11,6 +11,10 @@ class UserRepository @Inject()(userDAO: UserDAO) extends UserAdapter {
     userDAO insert transform(userGit)
   } map transform
 
+  def insertAll(usersGit: List[UserGit]): Task[List[UserGit]] = Task.deferFuture {
+    userDAO insertAll usersGit.map(transform)
+  }.map( _ map transform)
+
   def insertIfNotExist(userGit: UserGit): Task[UserGit] = Task.deferFuture {
     userDAO insertIfNotExist transform(userGit)
   } map transform
