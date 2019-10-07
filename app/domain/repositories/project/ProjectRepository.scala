@@ -42,4 +42,11 @@ class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter
         projectDAO offUpdating projectId
     }.map(_.asRight)
 
+    def deleteInfoProject(projectId: Int): Task[Option[Project]] = Task.deferFuture {
+        projectDAO deleteInfoProject projectId
+    }.map(_ map transform)
+
+    def deleteInfoProjectE(projectId: Int): Task[Either[DomainError, Project]] = {
+        deleteInfoProject(projectId).map(_.toRight(DomainError("Project not found", "12101")))
+    }
 }

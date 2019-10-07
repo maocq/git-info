@@ -1,10 +1,14 @@
 package persistence.project
 
-import java.time.{ZonedDateTime}
+import java.time.ZonedDateTime
 
 import javax.inject.Inject
+import persistence.commit.CommitTable.commitsdb
 import persistence.commit.{CommitDAO, CommitRecord}
+import persistence.diff.DiffTable.diffsdb
 import persistence.diff.{DiffDAO, DiffRecord}
+import persistence.issue.IssueTable.issuesdb
+import persistence.pr.PRTable.prsdb
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -46,5 +50,25 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     projectsdb.filter(_.id === id).map(_.updating).update(false)
   }
 
+  def deleteInfoProject(projectId: Int): Future[Option[ProjectRecord]] = {
+    findByID(projectId)
+      .flatMap(option  =>
+        option.map(p => deleteProject(p.id).map(r => Option(p)))
+          .getOrElse(Future.successful(None)))
+  }
+
+  private def deleteProject(projectId: Int): Future[Int] = db.run {
+    (for {
+      p <- prsdb.filter(_.projectId === projectId).delete
+      i <- issuesdb.filter(_.projectId === projectId).delete
+      d <- deleteDiffsCommits(projectId)
+      c <- commitsdb.filter(_.projectId === projectId).delete
+      y <- projectsdb.filter(_.id === projectId).delete
+    } yield p + i + d + c + y).transactionally
+  }
+
+  private def deleteDiffsCommits(projectId: Int): DBIO[Int] = {
+    diffsdb.filter(_.commitId in commitsdb.filter(_.projectId === projectId).map(_.id)).delete
+  }
 
 }

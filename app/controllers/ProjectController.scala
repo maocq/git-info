@@ -1,6 +1,6 @@
 package controllers
 
-import domain.commands.{RegisterGroupCommand, RegisterProjectCommand, UpdateProjectCommand}
+import domain.commands.{DeleteProjectCommand, RegisterGroupCommand, RegisterProjectCommand, UpdateProjectCommand}
 import infrastructure.{InfoUserDTO, TransformerDTOsHTTP}
 import javax.inject.Inject
 import persistence.querys.ProjectQueryDAO
@@ -13,6 +13,7 @@ class ProjectController @Inject()(
   registerProject: RegisterProjectCommand,
   registerGroup: RegisterGroupCommand,
   updateProjectCommand: UpdateProjectCommand,
+  deleteProjectCommand: DeleteProjectCommand,
   projectQueryDAO: ProjectQueryDAO,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -28,6 +29,10 @@ class ProjectController @Inject()(
 
   def updateProject: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
     ejecutar(updateProjectCommand, request.body)
+  }
+
+  def deleteProject: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
+    ejecutar(deleteProjectCommand, request.body)
   }
 
   def infoUsers() = Action.async { implicit request: Request[AnyContent] =>

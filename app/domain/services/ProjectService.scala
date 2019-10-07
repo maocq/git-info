@@ -17,6 +17,7 @@ import infrastructure.gitlab.GitLabService
 import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, IssueGitLabDTO, PRGitLabDTO, ProjectGitLabDTO, UserGitLabDTO}
 import javax.inject.Inject
 import monix.eval.Task
+import persistence.project.ProjectRecord
 
 class ProjectService @Inject()(
   grouppRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository,
@@ -30,6 +31,10 @@ class ProjectService @Inject()(
       g <- validateGroup(0, name)
       r <- grouppRepository.insert(g).map(_.asRight[GError]).toEitherT
     } yield r
+  }
+
+  def deleteProject(proyectId: Int): Task[Either[GError, Project]] = {
+    projectRepositoy deleteInfoProjectE proyectId
   }
 
   def registerProject(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
