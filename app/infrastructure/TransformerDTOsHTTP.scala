@@ -3,7 +3,7 @@ package infrastructure
 import controllers.IssuesForStatus
 import domain.model.TransformerDomain
 import persistence.project.{IssueState, UserIssuesClosed}
-import persistence.querys.{CommitsForUser, DiffsUser, FilesWithCommits, InfoGroupDTO}
+import persistence.querys.{CommitsForUser, DiffsUser, FilesWithCommits, InfoGroupDTO, NumberFile, NumbersGroup}
 import play.api.libs.json.Json
 
 trait TransformerDTOsHTTP extends TransformerDomain {
@@ -22,5 +22,7 @@ trait TransformerDTOsHTTP extends TransformerDomain {
   implicit val issuesForStatusFmt = Json.format[IssuesForStatus]
   implicit val UserIssuesClosedFmt = Json.format[UserIssuesClosed]
 
+  implicit val numberFileFmt = Json.format[NumberFile]
+  implicit val numbersinfoGroupFmt = Json.format[NumbersGroup]
   implicit val infoGroupFmt = Json.format[InfoGroupDTO]
 }

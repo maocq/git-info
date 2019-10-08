@@ -5,6 +5,7 @@ import java.time.ZonedDateTime
 import domain.model.Project
 import domain.repositories.project.ProjectAdapter
 import javax.inject.Inject
+import persistence.diff.DiffTable.diffsdb
 import persistence.commit.CommitTable.commitsdb
 import persistence.group.GroupRecord
 import persistence.group.GroupTable.groupsdb
@@ -22,9 +23,11 @@ case class CommitsForUser(project: String, commiter: String, commits: Int)
 case class FilesWithCommits(project: String, path: String, commits: Int)
 
 
+case class NumbersGroup(numberCommits: Int, numberAuthors: Int, numberIssues: Int, numberPrs: Int)
+case class NumberFile(name: String, weight: Int)
 case class InfoGroupDTO(
   projects: Seq[Project], firstCommit: ZonedDateTime, lastCommit: ZonedDateTime,
-  numberCommits: Int, numberAuthors: Int, numberIssues: Int, numberPrs: Int
+  numbers: NumbersGroup, files: List[NumberFile]
 )
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
@@ -44,6 +47,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val authors = getNumberAuthors(groupId)
     val issues = getNumberIssues(groupId)
     val prs = getNumberPRs(groupId)
+    val files = getFiles(groupId).map(res => res.map(getExtension).groupBy(identity).mapValues(_.size).filter(_._2 > 5))
 
     for {
       p <- projects
@@ -52,7 +56,18 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       a <- authors
       i <- issues
       r <- prs
-    } yield InfoGroupDTO(p, d.map(_._2).orNull, d.map(_._1).orNull, c, a, i, r)
+      f <- files
+    } yield InfoGroupDTO(p, d.map(_._2).orNull, d.map(_._1).orNull, NumbersGroup(c, a, i, r),
+      f.map{case (f, n) => NumberFile(f, n)}.toList.sortBy(_.weight).reverse)
+  }
+
+  def getFiles(groupId: Int): Future[Seq[String]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+      d <- diffsdb if c.id === d.commitId
+    } yield d.newPath).distinct.result
   }
 
   private def getProjectsPerGroup(groupId: Int): Future[Seq[Project]] = db.run {
@@ -104,7 +119,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     } yield c.committerEmail).distinct.length.result
   }
 
-
+  private def getExtension(file: String): String = if(file.contains(".")) file.substring(file.lastIndexOf(".") + 1) else "plain"
 
 
 

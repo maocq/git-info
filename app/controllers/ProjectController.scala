@@ -48,7 +48,10 @@ class ProjectController @Inject()(
   def infoGroup() = Action.async { implicit request: Request[AnyContent] =>
     projectQueryDAO.getAllInfoProject(1)
       .map(r => Ok(Json.toJson(r)))
-      .recover { case error => InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error)))) }
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
   }
 
 }
