@@ -1,6 +1,7 @@
 package controllers
 
 import domain.commands.{DeleteProjectCommand, RegisterGroupCommand, RegisterProjectCommand, UpdateProjectCommand}
+import domain.model.GError.DomainError
 import infrastructure.{InfoUserDTO, TransformerDTOsHTTP}
 import javax.inject.Inject
 import persistence.querys.ProjectQueryDAO
@@ -43,4 +44,11 @@ class ProjectController @Inject()(
       } ).toList
     }.map(list => Ok(Json.toJson(list.sortBy(_.commits)(Ordering.Int.reverse))))
   }
+
+  def infoGroup() = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.getAllInfoProject(1)
+      .map(r => Ok(Json.toJson(r)))
+      .recover { case error => InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error)))) }
+  }
+
 }

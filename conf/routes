@@ -5,10 +5,16 @@
 
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
+GET     /info                       controllers.ProjectController.infoGroup
+
+
+
+
 GET     /issues                     controllers.HomeController.issues
 GET     /user-issues                controllers.HomeController.userIssuesClosed
-
 GET     /info-users                 controllers.ProjectController.infoUsers
+
+
 
 POST    /group/register             controllers.ProjectController.registerGroup
 POST    /project/register           controllers.ProjectController.registerProject

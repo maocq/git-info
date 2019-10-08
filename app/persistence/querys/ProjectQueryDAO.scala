@@ -2,13 +2,15 @@ package persistence.querys
 
 import java.time.ZonedDateTime
 
+import domain.model.Project
+import domain.repositories.project.ProjectAdapter
 import javax.inject.Inject
 import persistence.commit.CommitTable.commitsdb
 import persistence.group.GroupRecord
 import persistence.group.GroupTable.groupsdb
 import persistence.issue.IssueTable.issuesdb
 import persistence.pr.PRTable.prsdb
-import persistence.project.{ProjectRecord, ProjectTable}
+import persistence.project.ProjectTable
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -20,8 +22,13 @@ case class CommitsForUser(project: String, commiter: String, commits: Int)
 case class FilesWithCommits(project: String, path: String, commits: Int)
 
 
+case class InfoGroupDTO(
+  projects: Seq[Project], firstCommit: ZonedDateTime, lastCommit: ZonedDateTime,
+  numberCommits: Int, numberAuthors: Int, numberIssues: Int, numberPrs: Int
+)
+
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery {
+  extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
 
   import ProjectTable._
   import profile.api._
@@ -30,7 +37,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     groupsdb.result
   }
 
-  def getAllInfoProject(groupId: Int): Future[(Seq[ProjectRecord], Option[(ZonedDateTime, ZonedDateTime)], Int, Int, Int, Int)] = {
+  def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {
     val projects = getProjectsPerGroup(groupId)
     val dates = getDatesGroup(groupId)
     val commits = getNumberCommits(groupId)
@@ -45,15 +52,15 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       a <- authors
       i <- issues
       r <- prs
-    } yield (p, d, c, a, i, r)
+    } yield InfoGroupDTO(p, d.map(_._1).orNull, d.map(_._2).orNull, c, a, i, r)
   }
 
-  private def getProjectsPerGroup(groupId: Int): Future[Seq[ProjectRecord]] = db.run {
+  private def getProjectsPerGroup(groupId: Int): Future[Seq[Project]] = db.run {
     (for {
       g <- groupsdb.filter(_.id === groupId)
       p <- projectsdb if g.id === p.groupId
     } yield p).result
-  }
+  }.map(_ map transform)
 
   private def getDatesGroup(groupId: Int): Future[Option[(ZonedDateTime, ZonedDateTime)]] = db.run {
     (for {
