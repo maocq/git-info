@@ -58,7 +58,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       r <- prs
       f <- files
     } yield InfoGroupDTO(p, d.map(_._2).orNull, d.map(_._1).orNull, NumbersGroup(c, a, i, r),
-      f.map{case (f, n) => NumberFile(f, n)}.toList.sortBy(_.weight).reverse)
+      f.map{case (f, n) => NumberFile(f, n)}.toList)
   }
 
   def getFiles(groupId: Int): Future[Seq[String]] = db.run {
