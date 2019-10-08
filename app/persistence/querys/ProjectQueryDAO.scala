@@ -52,7 +52,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       a <- authors
       i <- issues
       r <- prs
-    } yield InfoGroupDTO(p, d.map(_._1).orNull, d.map(_._2).orNull, c, a, i, r)
+    } yield InfoGroupDTO(p, d.map(_._2).orNull, d.map(_._1).orNull, c, a, i, r)
   }
 
   private def getProjectsPerGroup(groupId: Int): Future[Seq[Project]] = db.run {

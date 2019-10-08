@@ -14,10 +14,9 @@ import domain.repositories.project.ProjectRepository
 import domain.repositories.user.UserRepository
 import implicits.implicits._
 import infrastructure.gitlab.GitLabService
-import infrastructure.{CommitDiffGitLabDTO, CommitGitLabDTO, IssueGitLabDTO, PRGitLabDTO, ProjectGitLabDTO, UserGitLabDTO}
+import infrastructure._
 import javax.inject.Inject
 import monix.eval.Task
-import persistence.project.ProjectRecord
 
 class ProjectService @Inject()(
   grouppRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository,
