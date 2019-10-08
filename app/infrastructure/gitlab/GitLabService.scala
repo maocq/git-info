@@ -16,9 +16,11 @@ import scala.util.Try
 class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
                             (implicit ec: ExecutionContext) extends TransformerDTOs {
 
+  private val token = "saz8spC5AyehUEismJW4"
+
   def getProject(projectId: Int): Task[Either[GError, ProjectGitLabDTO]] = Task.deferFuture {
     http.get[ProjectGitLabDTO](s"https://gitlab.seven4n.com/api/v4/projects/$projectId",
-      Map("Private-Token" -> "saz8spC5AyehUEismJW4"))
+      Map("Private-Token" -> token))
   }.map(_.bimap(l => DomainError(s"Project not exist - ${l.error}", "11001"), _.response))
     .recover{case error => DomainError(error.getMessage, "11000").asLeft}
 
@@ -30,7 +32,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
   def getCommitsDiff(projectId: Int, commit: String): Task[Either[GError, (String, List[CommitDiffGitLabDTO])]] = Task.deferFuture {
     http.get[List[CommitDiffGitLabDTO]](
       s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits/$commit/diff?per_page=500",
-      Map("Private-Token" -> "saz8spC5AyehUEismJW4"))
+      Map("Private-Token" -> token))
   }.map(_.bimap(l => DomainError(l.error, "11001"), right => (commit, right.response)))
     .recover{case error => DomainError(error.getMessage, "11000").asLeft}
 
@@ -46,7 +48,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
 
   def getUser(id: Int): Task[Either[GError, UserGitLabDTO]] = Task.deferFuture {
     http.get[UserGitLabDTO](s"https://gitlab.seven4n.com/api/v4/users/$id",
-      Map("Private-Token" -> "saz8spC5AyehUEismJW4"))
+      Map("Private-Token" -> token))
   }.map(_.bimap(l => DomainError(s"User not exist - ${l.error}", "11003"), _.response))
     .recover{case error => DomainError(error.getMessage, "11000").asLeft}
 
@@ -62,7 +64,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
 
   private def getCommits(projectId: Int, page: Int, date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[CommitGitLabDTO]]]] = {
     http.get[List[CommitGitLabDTO]](s"https://gitlab.seven4n.com/api/v4/projects/$projectId/repository/commits?page=$page&per_page=100&since=${date.getOrElse("")}",
-      Map("Private-Token" -> "saz8spC5AyehUEismJW4"))
+      Map("Private-Token" -> token))
   }
 
   private def getAllPR(id: Int, page: Int, lista: List[PRGitLabDTO], date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[PRGitLabDTO]]]] ={
@@ -77,7 +79,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
 
   def getPR(projectId: Int, page: Int, date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[PRGitLabDTO]]]] = {
     http.get[List[PRGitLabDTO]](s"https://gitlab.seven4n.com/api/v4/projects/$projectId/merge_requests?page=$page&updated_after=${date.getOrElse("")}",
-      Map("Private-Token" -> "saz8spC5AyehUEismJW4"))
+      Map("Private-Token" -> token))
   }
 
   private def getAllIssues(id: Int, page: Int, lista: List[IssueGitLabDTO], date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[IssueGitLabDTO]]]] ={
@@ -92,7 +94,7 @@ class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
 
   def getIssues(projectId: Int, page: Int, date: Option[ZonedDateTime]): Future[Either[ErrorHTTP, ResponseHTTP[List[IssueGitLabDTO]]]] = {
     http.get[List[IssueGitLabDTO]](s"https://gitlab.seven4n.com/api/v4/projects/$projectId/issues?page=$page&updated_after=${date.getOrElse("")}",
-      Map("Private-Token" -> "saz8spC5AyehUEismJW4"))
+      Map("Private-Token" -> token))
   }
 
 
