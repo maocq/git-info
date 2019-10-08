@@ -1,8 +1,14 @@
 package persistence.querys
 
+import java.time.ZonedDateTime
+
 import javax.inject.Inject
-import persistence.commit.CommitDAO
-import persistence.diff.DiffDAO
+import persistence.commit.CommitTable.commitsdb
+import persistence.group.GroupRecord
+import persistence.group.GroupTable.groupsdb
+import persistence.issue.IssueTable.issuesdb
+import persistence.pr.PRTable.prsdb
+import persistence.project.{ProjectRecord, ProjectTable}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -14,11 +20,86 @@ case class CommitsForUser(project: String, commiter: String, commits: Int)
 case class FilesWithCommits(project: String, path: String, commits: Int)
 
 
+class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
+  extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery {
 
-class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, commitDAO: CommitDAO, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[JdbcProfile] with  TransformerQuery {
-
+  import ProjectTable._
   import profile.api._
+
+  def getGroups(): Future[Seq[GroupRecord]] = db.run {
+    groupsdb.result
+  }
+
+  def getAllInfoProject(groupId: Int): Future[(Seq[ProjectRecord], Option[(ZonedDateTime, ZonedDateTime)], Int, Int, Int, Int)] = {
+    val projects = getProjectsPerGroup(groupId)
+    val dates = getDatesGroup(groupId)
+    val commits = getNumberCommits(groupId)
+    val authors = getNumberAuthors(groupId)
+    val issues = getNumberIssues(groupId)
+    val prs = getNumberPRs(groupId)
+
+    for {
+      p <- projects
+      d <- dates
+      c <- commits
+      a <- authors
+      i <- issues
+      r <- prs
+    } yield (p, d, c, a, i, r)
+  }
+
+  private def getProjectsPerGroup(groupId: Int): Future[Seq[ProjectRecord]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+    } yield p).result
+  }
+
+  private def getDatesGroup(groupId: Int): Future[Option[(ZonedDateTime, ZonedDateTime)]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+    } yield c).groupBy(_ => true)
+      .map{ case (_, group) => (group.map(_.committedDate).max.get, group.map(_.committedDate).min.get)}
+      .result.headOption
+  }
+
+  private def getNumberCommits(groupId: Int): Future[Int] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+    } yield c).length.result
+  }
+
+  private def getNumberIssues(groupId: Int): Future[Int] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      i <- issuesdb if p.id === i.projectId
+    } yield i).length.result
+  }
+
+  private def getNumberPRs(groupId: Int): Future[Int] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      i <- prsdb if p.id === i.projectId
+    } yield i).length.result
+  }
+
+  private def getNumberAuthors(groupId: Int): Future[Int] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+    } yield c.committerEmail).distinct.length.result
+  }
+
+
+
+
 
   def commitUser(): Future[Vector[CommitsUser]] = db.run {
     sql"""

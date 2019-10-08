@@ -22,8 +22,8 @@ case class ProjectRecord(
 class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, commitDAO: CommitDAO, diffDAO: DiffDAO)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
 
-  import profile.api._
   import ProjectTable._
+  import profile.api._
 
   def findByID(id: Int): Future[Option[ProjectRecord]] = db.run {
     projectsdb.filter(_.id === id).result.headOption
@@ -70,5 +70,4 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
   private def deleteDiffsCommits(projectId: Int): DBIO[Int] = {
     diffsdb.filter(_.commitId in commitsdb.filter(_.projectId === projectId).map(_.id)).delete
   }
-
 }

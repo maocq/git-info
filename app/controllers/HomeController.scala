@@ -5,13 +5,11 @@ import java.time.temporal.ChronoUnit
 
 import cats.data.EitherT
 import cats.implicits._
-import domain.services.ProjectService
 import infrastructure.TransformerDTOsHTTP
-import infrastructure.gitlab.GitLabService
 import javax.inject._
 import monix.execution.Scheduler
-import persistence.diff.DiffDAO
 import persistence.project.{GitLabDB, IssueState}
+import persistence.querys.ProjectQueryDAO
 import play.api.libs.json.Json
 import play.api.mvc._
 
@@ -20,13 +18,20 @@ import scala.concurrent.{ExecutionContext, Future}
 case class IssuesForStatus(status: String, infoIssue: List[IssueState])
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabService, gitLab: GitLabDB, s: DiffDAO, p: ProjectService)(implicit ec: ExecutionContext)
+class HomeController @Inject()(
+  cc: ControllerComponents,
+  gitLab: GitLabDB,
+  projectQueryDAO: ProjectQueryDAO,
+)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with TransformerDTOsHTTP {
 
   implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
 
   def index() = Action { implicit request: Request[AnyContent] =>
 
+    projectQueryDAO.getAllInfoProject(1).foreach(e =>
+      println(e)
+    )
     /*
     p.updateInfoProject(222).value.runToFuture.recover{case es =>
       es.toString
@@ -41,7 +46,7 @@ class HomeController @Inject()(cc: ControllerComponents, gitLabService: GitLabSe
       println(e))
      */
 
-    s.test1().recover{case es => es.toString}.foreach(e => println(e))
+    //s.test1().recover{case es => es.toString}.foreach(e => println(e))
     //gitLabService.getMergeRequest(174, 1).map(s => s.toString).recover{case es => es.toString}.foreach(e => println(e))
     Ok(views.html.index())
   }
