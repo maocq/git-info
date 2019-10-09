@@ -25,9 +25,10 @@ case class FilesWithCommits(project: String, path: String, commits: Int)
 
 case class NumbersGroup(numberCommits: Int, numberAuthors: Int, numberIssues: Int, numberPrs: Int)
 case class NumberFile(name: String, weight: Int)
+case class LinesGroup(additions: Int, deletions: Int, total: Int)
 case class InfoGroupDTO(
   projects: Seq[Project], firstCommit: ZonedDateTime, lastCommit: ZonedDateTime,
-  numbers: NumbersGroup, files: List[NumberFile]
+  numbers: NumbersGroup, lines: LinesGroup, files: List[NumberFile]
 )
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
@@ -47,6 +48,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val authors = getNumberAuthors(groupId)
     val issues = getNumberIssues(groupId)
     val prs = getNumberPRs(groupId)
+    val lines = getLines(groupId)
     val files = getFiles(groupId).map(res => res.map(getExtension).groupBy(identity).mapValues(_.size).filter(_._2 > 5))
 
     for {
@@ -56,18 +58,11 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       a <- authors
       i <- issues
       r <- prs
+      l <- lines
       f <- files
-    } yield InfoGroupDTO(p, d.map(_._2).orNull, d.map(_._1).orNull, NumbersGroup(c, a, i, r),
-      f.map{case (f, n) => NumberFile(f, n)}.toList)
-  }
-
-  def getFiles(groupId: Int): Future[Seq[String]] = db.run {
-    (for {
-      g <- groupsdb.filter(_.id === groupId)
-      p <- projectsdb if g.id === p.groupId
-      c <- commitsdb if p.id === c.projectId
-      d <- diffsdb if c.id === d.commitId
-    } yield d.newPath).distinct.result
+    } yield
+      InfoGroupDTO(p, d.map(_._2).getOrElse(ZonedDateTime.now()), d.map(_._1).getOrElse(ZonedDateTime.now()), NumbersGroup(c, a, i, r),
+      LinesGroup(l._1, l._2, l._1 - l._2), f.map{case (f, n) => NumberFile(f, n)}.toList)
   }
 
   private def getProjectsPerGroup(groupId: Int): Future[Seq[Project]] = db.run {
@@ -118,6 +113,26 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       c <- commitsdb if p.id === c.projectId
     } yield c.committerEmail).distinct.length.result
   }
+
+  private def getFiles(groupId: Int): Future[Seq[String]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+      d <- diffsdb if c.id === d.commitId
+    } yield d.newPath).distinct.result
+  }
+
+  private def getLines(groupId: Int): Future[(Int, Int)] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+      d <- diffsdb if c.id === d.commitId
+    } yield d)
+      .groupBy(_ => true)
+      .map{ case (_, group) => (group.map(_.additions).sum.getOrElse(0), group.map(_.deletions).sum.getOrElse(0))}.result
+  }.map(_.headOption.getOrElse((0,0)))
 
   private def getExtension(file: String): String = if(file.contains(".")) file.substring(file.lastIndexOf(".") + 1) else "plain"
 

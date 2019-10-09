@@ -46,7 +46,7 @@ class ProjectController @Inject()(
   }
 
   def infoGroup() = Action.async { implicit request: Request[AnyContent] =>
-    projectQueryDAO.getAllInfoProject(1)
+    projectQueryDAO.getAllInfoProject(50)
       .map(r => Ok(Json.toJson(r)))
       .recover { case error => {
         logger.error(error.getMessage, error)

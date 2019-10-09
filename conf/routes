@@ -5,7 +5,7 @@
 
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
-GET     /info                       controllers.ProjectController.infoGroup
+GET     /groups                     controllers.ProjectController.infoGroup
 
 
 
