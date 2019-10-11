@@ -38,14 +38,14 @@ class ProjectController @Inject()(
     ejecutar(deleteProjectCommand, request.body)
   }
 
-  def infoUsers() = Action.async { implicit request: Request[AnyContent] =>
-    projectQueryDAO.commitUser().map { commits =>
-      commits.groupBy(commit => commit.email).map(tuple => {
-        val values = tuple._2.foldLeft((0,0,0)){ case (acc, nxt) =>  (acc._1 + 1, acc._2 + nxt.additions, acc._3 + nxt.deletions)}
-        InfoUserDTO(tuple._1, values._1, values._2, values._3)
-      } ).toList
-    }.map(list => Ok(Json.toJson(list.sortBy(_.commits)(Ordering.Int.reverse))))
-  }
+  def listGroups() = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.getGroups
+      .map(r => Ok(Json.toJson(r)))
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
+    }
 
   def infoGroup(id: Int) = Action.async { implicit request: Request[AnyContent] =>
     groupDAO.findByID(id)
@@ -56,5 +56,21 @@ class ProjectController @Inject()(
         InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
       }}
   }
+
+
+
+
+
+
+
+  def infoUsers() = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.commitUser().map { commits =>
+      commits.groupBy(commit => commit.email).map(tuple => {
+        val values = tuple._2.foldLeft((0,0,0)){ case (acc, nxt) =>  (acc._1 + 1, acc._2 + nxt.additions, acc._3 + nxt.deletions)}
+        InfoUserDTO(tuple._1, values._1, values._2, values._3)
+      } ).toList
+    }.map(list => Ok(Json.toJson(list.sortBy(_.commits)(Ordering.Int.reverse))))
+  }
+
 
 }

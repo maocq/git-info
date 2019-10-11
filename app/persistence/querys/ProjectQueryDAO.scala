@@ -23,12 +23,12 @@ case class CommitsForUser(project: String, commiter: String, commits: Int)
 case class FilesWithCommits(project: String, path: String, commits: Int)
 
 
-case class NumbersGroup(numberCommits: Int, numberAuthors: Int, numberIssues: Int, numberPrs: Int)
-case class NumberFile(name: String, weight: Int)
-case class LinesGroup(additions: Int, deletions: Int, total: Int)
+case class NumbersGroupDTO(numberCommits: Int, numberAuthors: Int, numberIssues: Int, numberPrs: Int)
+case class NumberFileDTO(name: String, weight: Int)
+case class LinesGroupDTO(additions: Int, deletions: Int, total: Int)
 case class InfoGroupDTO(
   projects: Seq[Project], firstCommit: ZonedDateTime, lastCommit: ZonedDateTime,
-  numbers: NumbersGroup, lines: LinesGroup, files: List[NumberFile]
+  numbers: NumbersGroupDTO, lines: LinesGroupDTO, files: List[NumberFileDTO]
 )
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
@@ -61,8 +61,8 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       l <- lines
       f <- files
     } yield
-      InfoGroupDTO(p, d.map(_._2).getOrElse(ZonedDateTime.now()), d.map(_._1).getOrElse(ZonedDateTime.now()), NumbersGroup(c, a, i, r),
-      LinesGroup(l._1, l._2, l._1 - l._2), f.map{case (f, n) => NumberFile(f, n)}.toList)
+      InfoGroupDTO(p, d.map(_._2).getOrElse(ZonedDateTime.now()), d.map(_._1).getOrElse(ZonedDateTime.now()), NumbersGroupDTO(c, a, i, r),
+      LinesGroupDTO(l._1, l._2, l._1 - l._2), f.map{case (f, n) => NumberFileDTO(f, n)}.toList)
   }
 
   private def getProjectsPerGroup(groupId: Int): Future[Seq[Project]] = db.run {
