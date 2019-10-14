@@ -53,14 +53,14 @@ class HomeController @Inject()(
 
   def userIssuesClosed() = Action.async {
     val end = LocalDate.now()
-    val start = end.minusDays(30)
+    val start = end.minusDays(90)
     gitLab.userIssuesClosed(start, end)
       .map(d => Ok(Json.toJson(d)))
   }
 
   def issues() = Action.async {
     val end = LocalDate.now()
-    val start = end.minusDays(30)
+    val start = end.minusDays(90)
 
     gitLab.issuesState(start, end)
       .map{issues =>

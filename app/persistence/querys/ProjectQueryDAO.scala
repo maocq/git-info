@@ -49,7 +49,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val issues = getNumberIssues(groupId)
     val prs = getNumberPRs(groupId)
     val lines = getLines(groupId)
-    val files = getFiles(groupId).map(res => res.map(getExtension).groupBy(identity).mapValues(_.size).filter(_._2 > 5))
+    val files = getFiles(groupId).map(res => res.map(getExtension).groupBy(identity).mapValues(_.size))
 
     for {
       p <- projects
