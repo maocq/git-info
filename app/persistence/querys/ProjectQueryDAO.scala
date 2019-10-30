@@ -31,7 +31,7 @@ case class InfoGroupDTO(
   projects: Seq[Project], firstCommit: ZonedDateTime, lastCommit: ZonedDateTime,
   numbers: NumbersGroupDTO, lines: LinesGroupDTO, files: List[NumberFileDTO]
 )
-case class ImpactGroupDTO(mounth: ZonedDateTime, count: Int)
+case class ImpactGroupDTO(mounth: String, count: Int)
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
@@ -44,13 +44,13 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   def getImpact(groupId: Int): Future[Seq[ImpactGroupDTO]] = db.run {
-    val dateTrunc = SimpleFunction.binary[String, ZonedDateTime, ZonedDateTime]("date_trunc")
+    val toChar = SimpleFunction.binary[ZonedDateTime, String, String]("to_char")
 
     (for {
       g <- groupsdb.filter(_.id === groupId)
       p <- projectsdb if g.id === p.groupId
       c <- commitsdb if p.id === c.projectId
-    } yield c).groupBy(c => dateTrunc("month", c.createdAt))
+    } yield c).groupBy(c => toChar(c.createdAt, "Mon, yyyy"))
       .map{ case(mount, commits) => mount -> commits.length }
       .sortBy(_._1)
       .map(_.mapTo[ImpactGroupDTO])
