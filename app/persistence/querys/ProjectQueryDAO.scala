@@ -5,8 +5,8 @@ import java.time.ZonedDateTime
 import domain.model.Project
 import domain.repositories.project.ProjectAdapter
 import javax.inject.Inject
-import persistence.diff.DiffTable.diffsdb
 import persistence.commit.CommitTable.commitsdb
+import persistence.diff.DiffTable.diffsdb
 import persistence.group.GroupRecord
 import persistence.group.GroupTable.groupsdb
 import persistence.issue.IssueTable.issuesdb
@@ -17,11 +17,12 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
+//Borrar
 case class CommitsUser(email: String, commit: String, additions: Int, deletions: Int)
 case class DiffsUser(project: String, commiter: String, additions: Int, deletions: Int)
 case class CommitsForUser(project: String, commiter: String, commits: Int)
 case class FilesWithCommits(project: String, path: String, commits: Int)
-
+//Borrar end
 
 case class NumbersGroupDTO(numberCommits: Int, numberAuthors: Int, numberIssues: Int, numberPrs: Int)
 case class NumberFileDTO(name: String, weight: Int)
@@ -30,6 +31,7 @@ case class InfoGroupDTO(
   projects: Seq[Project], firstCommit: ZonedDateTime, lastCommit: ZonedDateTime,
   numbers: NumbersGroupDTO, lines: LinesGroupDTO, files: List[NumberFileDTO]
 )
+case class ImpactGroupDTO(mounth: ZonedDateTime, count: Int)
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
@@ -39,6 +41,20 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   def getGroups(): Future[Seq[GroupRecord]] = db.run {
     groupsdb.result
+  }
+
+  def getImpact(groupId: Int): Future[Seq[ImpactGroupDTO]] = db.run {
+    val dateTrunc = SimpleFunction.binary[String, ZonedDateTime, ZonedDateTime]("date_trunc")
+
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+    } yield c).groupBy(c => dateTrunc("month", c.createdAt))
+      .map{ case(mount, commits) => mount -> commits.length }
+      .sortBy(_._1)
+      .map(_.mapTo[ImpactGroupDTO])
+      .result
   }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {

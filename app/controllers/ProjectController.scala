@@ -57,6 +57,17 @@ class ProjectController @Inject()(
       }}
   }
 
+  def impactGroup(id: Int) = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.getImpact(id)
+      .map(info => Ok(Json.toJson(info)))
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
+  }
+
+
+
 
 
 
