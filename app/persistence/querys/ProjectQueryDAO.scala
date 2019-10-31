@@ -7,6 +7,7 @@ import domain.repositories.project.ProjectAdapter
 import javax.inject.Inject
 import persistence.commit.CommitTable.commitsdb
 import persistence.diff.DiffTable.diffsdb
+import persistence.user.UserTable.usersdb
 import persistence.group.GroupRecord
 import persistence.group.GroupTable.groupsdb
 import persistence.issue.IssueTable.issuesdb
@@ -32,6 +33,7 @@ case class InfoGroupDTO(
   numbers: NumbersGroupDTO, lines: LinesGroupDTO, files: List[NumberFileDTO]
 )
 case class ImpactGroupDTO(mounth: String, count: Int)
+case class CategoryValueDTO(category: String, value: Int)
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
@@ -39,22 +41,41 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   import ProjectTable._
   import profile.api._
 
+  val toChar = SimpleFunction.binary[ZonedDateTime, String, String]("to_char")
+
   def getGroups(): Future[Seq[GroupRecord]] = db.run {
     groupsdb.result
   }
 
   def getImpact(groupId: Int): Future[Seq[ImpactGroupDTO]] = db.run {
-    val toChar = SimpleFunction.binary[ZonedDateTime, String, String]("to_char")
-
     (for {
       g <- groupsdb.filter(_.id === groupId)
       p <- projectsdb if g.id === p.groupId
       c <- commitsdb if p.id === c.projectId
-    } yield c).groupBy(c => toChar(c.createdAt, "Mon, yyyy"))
-      .map{ case(mount, commits) => mount -> commits.length }
-      .sortBy(_._1)
-      .map(_.mapTo[ImpactGroupDTO])
-      .result
+    } yield c).groupBy(c => toChar(c.createdAt, "Mon yyyy"))
+      .map{ case(mount, commits) => mount -> commits.length }.sortBy(_._1).map(_.mapTo[ImpactGroupDTO]).result
+  }
+
+  def getIssuesClosed(groupId: Int): Future[Seq[CategoryValueDTO]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      i <- issuesdb if p.id === i.projectId
+    } yield i)
+      .filter(i => i.closedAt.isDefined)
+      .groupBy(i => toChar(i.closedAt.getOrElse(ZonedDateTime.now()), "dd Mon yyyy"))
+      .map{ case(date, issues) => date -> issues.length }
+      .sortBy(_._1).map(_.mapTo[CategoryValueDTO]).result
+  }
+
+  def getNumberIssuesUsers(groupId: Int): Future[Seq[CategoryValueDTO]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      i <- issuesdb if p.id === i.projectId
+      u <- usersdb if i.closedBy === u.id
+    } yield u).groupBy(u => u.name)
+      .map{ case(name, users) => name -> users.length }.sortBy(_._2).map(_.mapTo[CategoryValueDTO]).result
   }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {
