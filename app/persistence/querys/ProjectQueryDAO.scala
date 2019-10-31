@@ -34,6 +34,7 @@ case class InfoGroupDTO(
 )
 case class ImpactGroupDTO(mounth: String, count: Int)
 case class CategoryValueDTO(category: String, value: Int)
+case class InfoIssuesDTO(issuesClosed: Seq[CategoryValueDTO], users: Seq[CategoryValueDTO])
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
@@ -56,7 +57,16 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       .map{ case(mount, commits) => mount -> commits.length }.sortBy(_._1).map(_.mapTo[ImpactGroupDTO]).result
   }
 
-  def getIssuesClosed(groupId: Int): Future[Seq[CategoryValueDTO]] = db.run {
+  def getInfoIssues(groupId: Int): Future[InfoIssuesDTO] = {
+    val issues = getIssuesClosed(groupId)
+    val users = getNumberIssuesUsers(groupId)
+    for {
+      i <- issues
+      u <- users
+    } yield InfoIssuesDTO(i, u)
+  }
+
+  private def getIssuesClosed(groupId: Int): Future[Seq[CategoryValueDTO]] = db.run {
     (for {
       g <- groupsdb.filter(_.id === groupId)
       p <- projectsdb if g.id === p.groupId
@@ -68,7 +78,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       .sortBy(_._1).map(_.mapTo[CategoryValueDTO]).result
   }
 
-  def getNumberIssuesUsers(groupId: Int): Future[Seq[CategoryValueDTO]] = db.run {
+  private def getNumberIssuesUsers(groupId: Int): Future[Seq[CategoryValueDTO]] = db.run {
     (for {
       g <- groupsdb.filter(_.id === groupId)
       p <- projectsdb if g.id === p.groupId
