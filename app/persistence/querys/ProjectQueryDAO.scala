@@ -52,7 +52,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       g <- groupsdb.filter(_.id === groupId)
       p <- projectsdb if g.id === p.groupId
       c <- commitsdb if p.id === c.projectId
-    } yield c).groupBy(c => toChar(c.createdAt, "Mon yyyy"))
+    } yield c).groupBy(c => toChar(c.createdAt, "yyyy-mm"))
       .map{ case(mount, commits) => mount -> commits.length }.sortBy(_._1).map(_.mapTo[CategoryValueDTO]).result
   }
 
@@ -72,7 +72,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       i <- issuesdb if p.id === i.projectId
     } yield i)
       .filter(i => i.closedAt.isDefined)
-      .groupBy(i => toChar(i.closedAt.getOrElse(ZonedDateTime.now()), "dd Mon yyyy"))
+      .groupBy(i => toChar(i.closedAt.getOrElse(ZonedDateTime.now()), "yyyy-mm-dd"))
       .map{ case(date, issues) => date -> issues.length }
       .sortBy(_._1).map(_.mapTo[CategoryValueDTO]).result
   }
