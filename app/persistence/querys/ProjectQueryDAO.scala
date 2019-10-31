@@ -32,7 +32,6 @@ case class InfoGroupDTO(
   projects: Seq[Project], firstCommit: ZonedDateTime, lastCommit: ZonedDateTime,
   numbers: NumbersGroupDTO, lines: LinesGroupDTO, files: List[NumberFileDTO]
 )
-case class ImpactGroupDTO(mounth: String, count: Int)
 case class CategoryValueDTO(category: String, value: Int)
 case class InfoIssuesDTO(issuesClosed: Seq[CategoryValueDTO], users: Seq[CategoryValueDTO])
 
@@ -48,13 +47,13 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     groupsdb.result
   }
 
-  def getImpact(groupId: Int): Future[Seq[ImpactGroupDTO]] = db.run {
+  def getImpact(groupId: Int): Future[Seq[CategoryValueDTO]] = db.run {
     (for {
       g <- groupsdb.filter(_.id === groupId)
       p <- projectsdb if g.id === p.groupId
       c <- commitsdb if p.id === c.projectId
     } yield c).groupBy(c => toChar(c.createdAt, "Mon yyyy"))
-      .map{ case(mount, commits) => mount -> commits.length }.sortBy(_._1).map(_.mapTo[ImpactGroupDTO]).result
+      .map{ case(mount, commits) => mount -> commits.length }.sortBy(_._1).map(_.mapTo[CategoryValueDTO]).result
   }
 
   def getInfoIssues(groupId: Int): Future[InfoIssuesDTO] = {
