@@ -9,20 +9,10 @@ import play.api.libs.json.Json
 
 trait TransformerDTOsHTTP extends TransformerDomain {
 
-  //Verificar
   implicit val projectIDDTOReads = Json.format[ProjectIDDTO]
   implicit val groupDTOReads = Json.format[GroupDTO]
+  implicit val groupIDDTOReads = Json.format[GroupIDDTO]
   implicit val messageDTOFmt = Json.format[MessageDTO]
-
-  implicit val infoUserDTOFmt = Json.format[InfoUserDTO]
-  implicit val diffsUserFmt = Json.format[DiffsUser]
-  implicit val commitsForUserFmt = Json.format[CommitsForUser]
-  implicit val filesWithCommitsFmt = Json.format[FilesWithCommits]
-
-  implicit val issueStateFmt = Json.format[IssueState]
-  implicit val issuesForStatusFmt = Json.format[IssuesForStatus]
-  implicit val UserIssuesClosedFmt = Json.format[UserIssuesClosed]
-  //End Verificar
 
   implicit val linesGroupFmt = Json.format[LinesGroupDTO]
   implicit val numberFileFmt = Json.format[NumberFileDTO]
@@ -32,4 +22,15 @@ trait TransformerDTOsHTTP extends TransformerDomain {
   implicit val groupRecordFmt = Json.format[GroupRecord]
   implicit val categoryValuemt = Json.format[CategoryValueDTO]
   implicit val infoIssuesFmt = Json.format[InfoIssuesDTO]
+
+  //Verificar
+  implicit val infoUserDTOFmt = Json.format[InfoUserDTO]
+  implicit val diffsUserFmt = Json.format[DiffsUser]
+  implicit val commitsForUserFmt = Json.format[CommitsForUser]
+  implicit val filesWithCommitsFmt = Json.format[FilesWithCommits]
+
+  implicit val issueStateFmt = Json.format[IssueState]
+  implicit val issuesForStatusFmt = Json.format[IssuesForStatus]
+  implicit val UserIssuesClosedFmt = Json.format[UserIssuesClosed]
+  //End Verificar
 }

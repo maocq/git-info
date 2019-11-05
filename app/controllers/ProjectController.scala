@@ -1,6 +1,6 @@
 package controllers
 
-import domain.commands.{DeleteProjectCommand, RegisterGroupCommand, RegisterProjectCommand, UpdateProjectCommand}
+import domain.commands.{DeleteGroupCommand, DeleteProjectCommand, RegisterGroupCommand, RegisterProjectCommand, UpdateProjectCommand}
 import domain.model.GError.DomainError
 import infrastructure.{InfoUserDTO, TransformerDTOsHTTP}
 import javax.inject.Inject
@@ -16,6 +16,7 @@ class ProjectController @Inject()(
   registerGroup: RegisterGroupCommand,
   updateProjectCommand: UpdateProjectCommand,
   deleteProjectCommand: DeleteProjectCommand,
+  deleteGroupCommand: DeleteGroupCommand,
   projectQueryDAO: ProjectQueryDAO,
   groupDAO: GroupDAO,
   cc: ControllerComponents
@@ -36,6 +37,10 @@ class ProjectController @Inject()(
 
   def deleteProject: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
     ejecutar(deleteProjectCommand, request.body)
+  }
+
+  def deleteGroup: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
+    ejecutar(deleteGroupCommand, request.body)
   }
 
   def listGroups() = Action.async { implicit request: Request[AnyContent] =>

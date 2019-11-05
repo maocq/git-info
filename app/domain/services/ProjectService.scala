@@ -32,6 +32,10 @@ class ProjectService @Inject()(
     } yield r
   }
 
+  def deleteGroup(groupId: Int): Task[Either[GError, Group]] = {
+    grouppRepository deleteGroupE groupId
+  }
+
   def deleteProject(proyectId: Int): Task[Either[GError, Project]] = {
     projectRepositoy deleteInfoProjectE proyectId
   }

@@ -2,6 +2,7 @@ package infrastructure
 
 //Request
 case class ProjectIDDTO(id: Int, groupId: Int)
+case class GroupIDDTO(id: Int)
 case class GroupDTO(name: String)
 
 //Response

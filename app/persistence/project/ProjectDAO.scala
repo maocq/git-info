@@ -58,16 +58,13 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
   }
 
   private def deleteProject(projectId: Int): Future[Int] = db.run {
-    (for {
-      p <- prsdb.filter(_.projectId === projectId).delete
-      i <- issuesdb.filter(_.projectId === projectId).delete
-      d <- deleteDiffsCommits(projectId)
-      c <- commitsdb.filter(_.projectId === projectId).delete
-      y <- projectsdb.filter(_.id === projectId).delete
-    } yield p + i + d + c + y).transactionally
-  }
+    val project = projectsdb.filter(_.id === projectId)
+    val commits = commitsdb.filter(_.projectId === projectId)
+    val diffs = diffsdb.filter(_.commitId in commits.map(_.id))
+    val issues = issuesdb.filter(_.projectId === projectId)
+    val prs = prsdb.filter(_.projectId === projectId)
 
-  private def deleteDiffsCommits(projectId: Int): DBIO[Int] = {
-    diffsdb.filter(_.commitId in commitsdb.filter(_.projectId === projectId).map(_.id)).delete
+    (prs.delete andThen issues.delete andThen diffs.delete
+      andThen commits.delete andThen project.delete).transactionally
   }
 }
