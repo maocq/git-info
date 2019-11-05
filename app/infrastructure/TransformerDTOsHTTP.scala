@@ -12,6 +12,7 @@ trait TransformerDTOsHTTP extends TransformerDomain {
   implicit val projectIDDTOReads = Json.format[ProjectIDDTO]
   implicit val groupDTOReads = Json.format[GroupDTO]
   implicit val groupIDDTOReads = Json.format[GroupIDDTO]
+  implicit val groupUpdateDTOReads = Json.format[GroupUpdateDTO]
   implicit val messageDTOFmt = Json.format[MessageDTO]
 
   implicit val linesGroupFmt = Json.format[LinesGroupDTO]

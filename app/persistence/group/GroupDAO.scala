@@ -27,6 +27,13 @@ class GroupDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider
     (groupsdb returning groupsdb) += groupRecord
   }
 
+  def update(groupRecord: GroupRecord): Future[Option[GroupRecord]] = db.run {
+    groupsdb.filter(_.id === groupRecord.id).update(groupRecord).map {
+      case 0 => None
+      case _ => Some(groupRecord)
+    }
+  }
+
   def findByID(id: Int): Future[Option[GroupRecord]] = db.run {
     groupsdb.filter(_.id === id).result.headOption
   }

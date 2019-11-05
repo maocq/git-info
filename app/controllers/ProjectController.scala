@@ -1,6 +1,6 @@
 package controllers
 
-import domain.commands.{DeleteGroupCommand, DeleteProjectCommand, RegisterGroupCommand, RegisterProjectCommand, UpdateProjectCommand}
+import domain.commands.{DeleteGroupCommand, DeleteProjectCommand, RegisterGroupCommand, RegisterProjectCommand, UpdateGroupCommand, UpdateProjectCommand}
 import domain.model.GError.DomainError
 import infrastructure.{InfoUserDTO, TransformerDTOsHTTP}
 import javax.inject.Inject
@@ -14,6 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ProjectController @Inject()(
   registerProject: RegisterProjectCommand,
   registerGroup: RegisterGroupCommand,
+  updateGroupCommand: UpdateGroupCommand,
   updateProjectCommand: UpdateProjectCommand,
   deleteProjectCommand: DeleteProjectCommand,
   deleteGroupCommand: DeleteGroupCommand,
@@ -29,6 +30,10 @@ class ProjectController @Inject()(
 
   def registerGroup: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
     ejecutar(registerGroup, request.body)
+  }
+
+  def updateGroup: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
+    ejecutar(updateGroupCommand, request.body)
   }
 
   def updateProject: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>

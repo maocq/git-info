@@ -32,6 +32,14 @@ class ProjectService @Inject()(
     } yield r
   }
 
+  def updateGroup(id: Int, name: String) = {
+    for {
+      n <- transformGroup(id, name)
+      g <- grouppRepository.findByIDEither(n.id).toEitherT
+      u <- grouppRepository.updateE(n.copy(createdAt = g.createdAt)).toEitherT
+    } yield  u
+  }
+
   def deleteGroup(groupId: Int): Task[Either[GError, Group]] = {
     grouppRepository deleteGroupE groupId
   }
@@ -106,6 +114,10 @@ class ProjectService @Inject()(
   private def transformProject(dto: ProjectGitLabDTO, groupId: Int): EitherT[Task, GError, Project] = EitherT.fromEither {
     Project(dto.id, dto.description, dto.name, dto.name_with_namespace, dto.path, dto.path_with_namespace,
       dto.created_at, dto.default_branch.getOrElse(""), dto.ssh_url_to_repo, dto.http_url_to_repo, dto.web_url, groupId).asRight
+  }
+
+  private def transformGroup(id: Int, name: String): EitherT[Task, GError, Group] = EitherT.fromEither {
+    Group(id, name, ZonedDateTime.now()).asRight
   }
 
   private def transformCommits(dtos: List[CommitGitLabDTO], projectId: Int): EitherT[Task, GError, List[Commit]] = EitherT.fromEither {
