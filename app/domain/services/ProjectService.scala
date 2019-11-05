@@ -19,7 +19,7 @@ import javax.inject.Inject
 import monix.eval.Task
 
 class ProjectService @Inject()(
-  grouppRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository,
+  groupRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository,
   issueRepository: IssueRepository, prRepository: PRRepository, userRepository: UserRepository, gitLab: GitLabService
 ) {
 
@@ -28,20 +28,20 @@ class ProjectService @Inject()(
   def registerGroup(name: String): EitherT[Task, GError, Group] = {
     for {
       g <- validateGroup(0, name)
-      r <- grouppRepository.insert(g).map(_.asRight[GError]).toEitherT
+      r <- groupRepository.insert(g).map(_.asRight[GError]).toEitherT
     } yield r
   }
 
   def updateGroup(id: Int, name: String) = {
     for {
       n <- transformGroup(id, name)
-      g <- grouppRepository.findByIDEither(n.id).toEitherT
-      u <- grouppRepository.updateE(n.copy(createdAt = g.createdAt)).toEitherT
+      g <- groupRepository.findByIDEither(n.id).toEitherT
+      u <- groupRepository.updateE(n.copy(createdAt = g.createdAt)).toEitherT
     } yield  u
   }
 
   def deleteGroup(groupId: Int): Task[Either[GError, Group]] = {
-    grouppRepository deleteGroupE groupId
+    groupRepository deleteGroupE groupId
   }
 
   def deleteProject(proyectId: Int): Task[Either[GError, Project]] = {
@@ -49,7 +49,7 @@ class ProjectService @Inject()(
   }
 
   def registerProject(proyectId: Int, groupId: Int): EitherT[Task, GError, Project] = for {
-      g <- grouppRepository.findByIDEither(groupId).toEitherT
+      g <- groupRepository.findByIDEither(groupId).toEitherT
       _ <- projectRepositoy.validateNotExistProject(proyectId).toEitherT
       d <- gitLab.getProject(proyectId).toEitherT
       p <- transformProject(d, g.id)
