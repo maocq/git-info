@@ -67,6 +67,16 @@ class ProjectController @Inject()(
       }}
   }
 
+  def infoSimpleGroup(id: Int) = Action.async { implicit request: Request[AnyContent] =>
+    groupDAO.findByID(id)
+      .map(option => option
+        .map(info => Ok(Json.toJson(info))).getOrElse(NotFound(Json.toJson(DomainError("Group not found", "12102")))))
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
+  }
+
   def impactGroup(id: Int) = Action.async { implicit request: Request[AnyContent] =>
     projectQueryDAO.getImpact(id)
       .map(info => Ok(Json.toJson(info)))
