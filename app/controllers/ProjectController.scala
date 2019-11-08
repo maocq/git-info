@@ -97,7 +97,7 @@ class ProjectController @Inject()(
 
   def filesGroup(id: Int) = Action.async { implicit request: Request[AnyContent] =>
     projectQueryDAO.getFilesGroup(id).map(linesfile => {
-      val r = linesfile.groupBy(_.project).map{ case(key, value) => ProjectFileLines(key, value.map(l => FileLines(getNameFile(l.file), l.lines)))}
+      val r = linesfile.groupBy(_.project).map{ case(key, value) => ProjectFileLines(key, value.take(5).map(l => FileLines(getNameFile(l.file), l.lines)))}
       Ok(Json.toJson(r))
     })
   }

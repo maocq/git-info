@@ -99,7 +99,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       .map{ case (group, tupla) => (
         group._1, group._2,
         tupla.map(t => t._2.additions).sum.getOrElse(0) + tupla.map(t => t._2.additions).sum.getOrElse(0)
-      )}.sortBy(_._3.desc).take(20).map(_.mapTo[LinesFile]).result
+      )}.sortBy(_._3.desc).map(_.mapTo[LinesFile]).result
   }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {
