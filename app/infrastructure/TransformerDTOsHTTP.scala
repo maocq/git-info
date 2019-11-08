@@ -24,6 +24,9 @@ trait TransformerDTOsHTTP extends TransformerDomain {
   implicit val categoryValuemt = Json.format[CategoryValueDTO]
   implicit val infoIssuesFmt = Json.format[InfoIssuesDTO]
 
+  implicit val fileLinesFmt = Json.format[FileLines]
+  implicit val projectFileLinesFmt = Json.format[ProjectFileLines]
+
   //Verificar
   implicit val infoUserDTOFmt = Json.format[InfoUserDTO]
   implicit val diffsUserFmt = Json.format[DiffsUser]

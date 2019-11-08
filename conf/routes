@@ -10,6 +10,7 @@ GET     /groups/:id                 controllers.ProjectController.infoGroup(id: 
 GET     /groups/:id/info            controllers.ProjectController.infoSimpleGroup(id: Int)
 GET     /groups/:id/impact          controllers.ProjectController.impactGroup(id: Int)
 GET     /groups/:id/issues          controllers.ProjectController.issuesGroup(id: Int)
+GET     /groups/:id/files           controllers.ProjectController.filesGroup(id: Int)
 
 
 

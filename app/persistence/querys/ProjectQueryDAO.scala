@@ -35,6 +35,8 @@ case class InfoGroupDTO(
 case class CategoryValueDTO(category: String, value: Int)
 case class InfoIssuesDTO(issuesClosed: Seq[CategoryValueDTO], users: Seq[CategoryValueDTO])
 
+case class LinesFile(project: String, file: String, lines: Int)
+
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
 
@@ -74,7 +76,7 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       .filter(i => i.closedAt.isDefined)
       .groupBy(i => toChar(i.closedAt.getOrElse(ZonedDateTime.now()), "yyyy-mm-dd"))
       .map{ case(date, issues) => date -> issues.length }
-      .sortBy(_._1).map(_.mapTo[CategoryValueDTO]).result
+      .sortBy(_._1.desc).map(_.mapTo[CategoryValueDTO]).result
   }
 
   private def getNumberIssuesUsers(groupId: Int): Future[Seq[CategoryValueDTO]] = db.run {
@@ -85,6 +87,19 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       u <- usersdb if i.closedBy === u.id
     } yield u).groupBy(u => u.name)
       .map{ case(name, users) => name -> users.length }.sortBy(_._2).map(_.mapTo[CategoryValueDTO]).result
+  }
+
+  def getFilesGroup(groupId: Int): Future[Seq[LinesFile]] = db.run{
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+      d <- diffsdb if c.id === d.commitId
+    } yield (p, d)).groupBy{ case(project, diff) => (project.name, diff.newPath)}
+      .map{ case (group, tupla) => (
+        group._1, group._2,
+        tupla.map(t => t._2.additions).sum.getOrElse(0) + tupla.map(t => t._2.additions).sum.getOrElse(0)
+      )}.sortBy(_._3.desc).take(20).map(_.mapTo[LinesFile]).result
   }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {
@@ -181,7 +196,6 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }.map(_.headOption.getOrElse((0,0)))
 
   private def getExtension(file: String): String = if(file.contains(".")) file.substring(file.lastIndexOf(".") + 1) else "plain"
-
 
 
   def commitUser(): Future[Vector[CommitsUser]] = db.run {

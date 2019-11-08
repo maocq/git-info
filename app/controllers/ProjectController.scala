@@ -1,8 +1,8 @@
 package controllers
 
-import domain.commands.{DeleteGroupCommand, DeleteProjectCommand, RegisterGroupCommand, RegisterProjectCommand, UpdateGroupCommand, UpdateProjectCommand}
+import domain.commands._
 import domain.model.GError.DomainError
-import infrastructure.{InfoUserDTO, TransformerDTOsHTTP}
+import infrastructure.{FileLines, InfoUserDTO, ProjectFileLines, TransformerDTOsHTTP}
 import javax.inject.Inject
 import persistence.group.GroupDAO
 import persistence.querys.ProjectQueryDAO
@@ -95,9 +95,14 @@ class ProjectController @Inject()(
       }}
   }
 
+  def filesGroup(id: Int) = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.getFilesGroup(id).map(linesfile => {
+      val r = linesfile.groupBy(_.project).map{ case(key, value) => ProjectFileLines(key, value.map(l => FileLines(getNameFile(l.file), l.lines)))}
+      Ok(Json.toJson(r))
+    })
+  }
 
-
-
+  private def getNameFile(file: String): String = if(file.contains("/")) file.substring(file.lastIndexOf("/") + 1) else file
 
 
 
