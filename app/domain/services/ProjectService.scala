@@ -17,6 +17,7 @@ import infrastructure.gitlab.GitLabService
 import infrastructure._
 import javax.inject.Inject
 import monix.eval.Task
+import monix.execution.Scheduler
 
 class ProjectService @Inject()(
   groupRepository: GroupRepository, projectRepositoy: ProjectRepository, commitRepository: CommitRepository,
@@ -32,7 +33,7 @@ class ProjectService @Inject()(
     } yield r
   }
 
-  def updateGroup(id: Int, name: String) = {
+  def updateGroup(id: Int, name: String): EitherT[Task, GError, Group] = {
     for {
       n <- transformGroup(id, name)
       g <- groupRepository.findByIDEither(n.id).toEitherT
@@ -56,15 +57,16 @@ class ProjectService @Inject()(
       r <- projectRepositoy.insertEither(p).toEitherT
     } yield r
 
-  def updateInfoProject(projectId: Int): EitherT[Task, GError, ((List[Commit], List[Diff]), List[Issue], List[PR])] =
-    for {
+  def updateInfoProject(projectId: Int)(implicit s: Scheduler): EitherT[Task, GError, ((List[Commit], List[Diff]), List[Issue], List[PR])] =
+    (for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       _ <- projectRepositoy.onUpdating(projectId).toEitherT
       c <- registerCommits(projectId)
       i <- registerIssues(projectId)
       p <- registerPRs(projectId)
       _ <- projectRepositoy.offUpdating(projectId).toEitherT
-    } yield (c, i, p)
+    } yield (c, i, p))
+      .leftMap(l => {if(l.errrorCode != "13000") projectRepositoy.offUpdating(projectId).runToFuture; l})
 
   private def registerCommits(projectId: Int): EitherT[Task, GError, (List[Commit], List[Diff])] = for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT

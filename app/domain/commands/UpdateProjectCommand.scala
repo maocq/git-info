@@ -25,10 +25,10 @@ class UpdateProjectCommand @Inject()(projectService: ProjectService) extends Com
       .fold(leftConsequence, r => rightConsequence(Json.toJson(r)))
   }
 
-  def updateInfoProject(projectID: Int) = {
+  def updateInfoProject(projectID: Int): Task[Either[GError, MessageDTO]] = {
     Task.eval {
       projectService.updateInfoProject(projectID)
-        .fold(l => {if(l.errrorCode != "13000") projectService.finishUpdating(projectID).runToFuture; Json.toJson(l)}, Json.toJson(_))
+        .fold(Json.toJson(_), Json.toJson(_))
         .recover{case error => projectService.finishUpdating(projectID).runToFuture; Json.toJson(error.getMessage)}
         .foreach(i => logger.info(s"Response: $i"))
 
