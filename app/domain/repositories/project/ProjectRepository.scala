@@ -15,6 +15,10 @@ class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter
         projectDAO findByID id
     }.map(_ map transform)
 
+    def getProjectsByGroup(groupId: Int): Task[Seq[Project]] = Task.deferFuture {
+        projectDAO getProjectsByGroup groupId
+    }.map(_ map transform)
+
     def insert(project: Project): Task[Project] = Task.deferFuture{
         projectDAO insert transform(project)
     } map transform

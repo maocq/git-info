@@ -29,6 +29,10 @@ class ProjectDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     projectsdb.filter(_.id === id).result.headOption
   }
 
+  def getProjectsByGroup(groupId: Int): Future[Seq[ProjectRecord]] = db.run {
+    projectsdb.filter(_.groupId === groupId).result
+  }
+
   def insert(projectRecord: ProjectRecord): Future[ProjectRecord] = db.run {
     (projectsdb returning projectsdb) += projectRecord
   }

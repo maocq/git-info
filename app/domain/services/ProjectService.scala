@@ -26,6 +26,8 @@ class ProjectService @Inject()(
 
   def getProject(proyectId: Int): Task[Either[GError, Project]] = projectRepositoy.findByIDEither(proyectId)
 
+  def getGroup(groupId: Int): Task[Either[GError, Group]] = groupRepository.findByIDEither(groupId)
+
   def registerGroup(name: String): EitherT[Task, GError, Group] = {
     for {
       g <- validateGroup(0, name)
@@ -39,6 +41,10 @@ class ProjectService @Inject()(
       g <- groupRepository.findByIDEither(n.id).toEitherT
       u <- groupRepository.updateE(n.copy(createdAt = g.createdAt)).toEitherT
     } yield  u
+  }
+
+  def getProjectsByGroup(groupId: Int) = {
+    projectRepositoy getProjectsByGroup groupId
   }
 
   def deleteGroup(groupId: Int): Task[Either[GError, Group]] = {
@@ -78,6 +84,7 @@ class ProjectService @Inject()(
       d <- transformDiffs(t)
       r <- projectRepositoy.insertInfoCommits(f, d).map(_.asRight[GError]).toEitherT
     } yield r
+
 
   private def registerIssues(projectId: Int): EitherT[Task, GError, List[Issue]] = for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT

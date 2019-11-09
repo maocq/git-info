@@ -22,6 +22,7 @@ GET     /info-users                 controllers.ProjectController.infoUsers
 
 POST    /group/register             controllers.ProjectController.registerGroup
 POST    /group/update               controllers.ProjectController.updateGroup
+POST    /group/update-projects      controllers.ProjectController.updateProjectsGroups
 POST    /group/delete               controllers.ProjectController.deleteGroup
 POST    /project/register           controllers.ProjectController.registerProject
 POST    /project/update             controllers.ProjectController.updateProject

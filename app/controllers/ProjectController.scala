@@ -16,6 +16,7 @@ class ProjectController @Inject()(
   registerGroup: RegisterGroupCommand,
   updateGroupCommand: UpdateGroupCommand,
   updateProjectCommand: UpdateProjectCommand,
+  updateProjectsGroupCommand: UpdateProjectsGroupCommand,
   deleteProjectCommand: DeleteProjectCommand,
   deleteGroupCommand: DeleteGroupCommand,
   projectQueryDAO: ProjectQueryDAO,
@@ -34,6 +35,10 @@ class ProjectController @Inject()(
 
   def updateGroup: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
     ejecutar(updateGroupCommand, request.body)
+  }
+
+  def updateProjectsGroups: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
+    ejecutar(updateProjectsGroupCommand, request.body)
   }
 
   def updateProject: Action[JsValue] = Action.async(parse.json) { implicit request: Request[JsValue]  =>
