@@ -11,6 +11,7 @@ GET     /groups/:id/info            controllers.ProjectController.infoSimpleGrou
 GET     /groups/:id/impact          controllers.ProjectController.impactGroup(id: Int)
 GET     /groups/:id/issues          controllers.ProjectController.issuesGroup(id: Int)
 GET     /groups/:id/files           controllers.ProjectController.filesGroup(id: Int)
+GET     /groups/:id/updating        controllers.ProjectController.updatingGroup(id: Int)
 
 
 

@@ -34,8 +34,8 @@ case class InfoGroupDTO(
 )
 case class CategoryValueDTO(category: String, value: Int)
 case class InfoIssuesDTO(issuesClosed: Seq[CategoryValueDTO], users: Seq[CategoryValueDTO])
-
 case class LinesFile(project: String, file: String, lines: Int)
+case class UpdatingGroup(updating: Boolean)
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
@@ -100,6 +100,10 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
         group._1, group._2,
         tupla.map(t => t._2.additions).sum.getOrElse(0) + tupla.map(t => t._2.additions).sum.getOrElse(0)
       )}.sortBy(_._3.desc).map(_.mapTo[LinesFile]).result
+  }
+
+  def updatingGroup(groupId: Int): Future[UpdatingGroup] = {
+    getProjectsPerGroup(groupId).map(projects => UpdatingGroup(projects.exists(project => project.updating)))
   }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {

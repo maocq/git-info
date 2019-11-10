@@ -109,6 +109,15 @@ class ProjectController @Inject()(
 
   private def getNameFile(file: String): String = if(file.contains("/")) file.substring(file.lastIndexOf("/") + 1) else file
 
+  def updatingGroup(id: Int) = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.updatingGroup(id)
+      .map(info => Ok(Json.toJson(info)))
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
+  }
+
 
 
 
