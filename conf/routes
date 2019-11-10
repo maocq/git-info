@@ -22,6 +22,7 @@ POST    /project/register           controllers.ProjectController.registerProjec
 POST    /project/update             controllers.ProjectController.updateProject
 POST    /project/delete             controllers.ProjectController.deleteProject
 
+
 #Eliminar
 GET     /issues                     controllers.HomeController.issues
 GET     /user-issues                controllers.HomeController.userIssuesClosed
