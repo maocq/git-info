@@ -25,26 +25,16 @@ class UpdateProjectsGroupCommand @Inject()(projectService: ProjectService) exten
       .fold(leftConsequence, r => rightConsequence(Json.toJson(r)))
   }
 
-  private def updateInfoGroup(groupID: Int): Task[Either[GError, MessageDTO]] = {
-    /*
-    Task.eval {
-      projectService.getProjectsByGroup(groupID)
-        .flatMap(projects => Task.traverse(projects){project => updateInfoProject(project.id)})
-        .foreach(i => logger.info(s"Response: $i"))
-
-
-    }*/
+  private def updateInfoGroup(groupID: Int): Task[Either[GError, InfoUpdated]] = {
     projectService.getProjectsByGroup(groupID)
       .flatMap(projects => Task.traverse(projects){project => updateInfoProject(project.id)})
-      .map(p =>
-        MessageDTO("Updating info").asRight[GError])
+      .map(r => InfoUpdated("Info updated", r.sum).asRight)
   }
 
-
-  private def updateInfoProject(projectID: Int): Task[String] = {
+  private def updateInfoProject(projectID: Int): Task[Int] = {
     projectService.updateInfoProject(projectID)
-      .fold(_.message, r => (r.commits.commits.size + r.issues.size + r.prs.size).toString)
-      .recover{case error => projectService.finishUpdating(projectID).runToFuture; error.getMessage}
+      .fold(l => 0, r => (r.commits.commits.size + r.issues.size + r.prs.size))
+      .recover{case error => projectService.finishUpdating(projectID).runToFuture; 0}
   }
 
 }
