@@ -29,7 +29,7 @@ case class Group(
 
 case class Project (
   id: Int, description: String, name: String, nameWithNamespace: String, path: String, pathWithNamespace: String, createdAt: ZonedDateTime, defaultBranch: String,
-  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String, groupId: Int, updating: Boolean = false
+  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String, groupId: Int
 )
 
 case class Commit(
@@ -54,3 +54,6 @@ case class PR(
 )
 
 case class UserGit(id: Int, name: String, username: String, avatarUrl: String, webUrl: String)
+
+case class Commits(commits: List[Commit], diffs: List[Diff])
+case class NewInfo(commits: Commits, issues: List[Issue], prs: List[PR])

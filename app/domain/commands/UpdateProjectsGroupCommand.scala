@@ -26,13 +26,18 @@ class UpdateProjectsGroupCommand @Inject()(projectService: ProjectService) exten
   }
 
   private def updateInfoGroup(groupID: Int): Task[Either[GError, MessageDTO]] = {
+    /*
     Task.eval {
       projectService.getProjectsByGroup(groupID)
         .flatMap(projects => Task.traverse(projects){project => updateInfoProject(project.id)})
         .foreach(i => logger.info(s"Response: $i"))
 
-      MessageDTO("Updating info").asRight[GError]
-    }
+
+    }*/
+    projectService.getProjectsByGroup(groupID)
+      .flatMap(projects => Task.traverse(projects){project => updateInfoProject(project.id)})
+      .map(_ =>
+        MessageDTO("Updating info").asRight[GError])
   }
 
 

@@ -2,7 +2,7 @@ package domain.repositories.project
 
 import cats.implicits._
 import domain.model.GError.DomainError
-import domain.model.{Commit, Diff, GError, Project}
+import domain.model.{Commit, Commits, Diff, GError, Project}
 import domain.repositories.commit.CommitAdapter
 import domain.repositories.diff.DiffAdapter
 import javax.inject.Inject
@@ -25,9 +25,9 @@ class ProjectRepository @Inject()(projectDAO: ProjectDAO) extends ProjectAdapter
 
     def insertEither(project: Project): Task[Either[GError, Project]] = insert(project).map(_.asRight[GError])
 
-    def insertInfoCommits(commits: List[Commit], diffs: List[Diff]): Task[(List[Commit], List[Diff])] = Task.deferFuture {
+    def insertInfoCommits(commits: List[Commit], diffs: List[Diff]): Task[Commits] = Task.deferFuture {
         projectDAO.insertInfoCommits(commits.map(transform), diffs.map(transform))
-    }.map( r => (r._1.map(transform), r._2.map(transform)) )
+    }.map( r => Commits(r._1.map(transform), r._2.map(transform)) )
 
     def findByIDEither(id: Int): Task[Either[GError, Project]] = {
         findByID(id).map(_.toRight(DomainError("Project not found", "12101")))

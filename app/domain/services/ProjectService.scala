@@ -63,7 +63,7 @@ class ProjectService @Inject()(
       r <- projectRepositoy.insertEither(p).toEitherT
     } yield r
 
-  def updateInfoProject(projectId: Int)(implicit s: Scheduler): EitherT[Task, GError, ((List[Commit], List[Diff]), List[Issue], List[PR])] =
+  def updateInfoProject(projectId: Int)(implicit s: Scheduler): EitherT[Task, GError, NewInfo] =
     (for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       _ <- projectRepositoy.onUpdating(projectId).toEitherT
@@ -71,10 +71,10 @@ class ProjectService @Inject()(
       i <- registerIssues(projectId)
       p <- registerPRs(projectId)
       _ <- projectRepositoy.offUpdating(projectId).toEitherT
-    } yield (c, i, p))
+    } yield NewInfo(c, i, p))
       .leftMap(l => {if(l.errrorCode != "13000") projectRepositoy.offUpdating(projectId).runToFuture; l})
 
-  private def registerCommits(projectId: Int): EitherT[Task, GError, (List[Commit], List[Diff])] = for {
+  private def registerCommits(projectId: Int): EitherT[Task, GError, Commits] = for {
       _ <- projectRepositoy.findByIDEither(projectId).toEitherT
       l <- commitRepository.getLastDateCommit(projectId).map(_.asRight[GError]).toEitherT
       a <- gitLab.getAllCommits(projectId, l).toEitherT

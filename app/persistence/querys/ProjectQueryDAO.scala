@@ -102,9 +102,12 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       )}.sortBy(_._3.desc).map(_.mapTo[LinesFile]).result
   }
 
-  def updatingGroup(groupId: Int): Future[UpdatingGroup] = {
-    getProjectsPerGroup(groupId).map(projects => UpdatingGroup(projects.exists(project => project.updating)))
-  }
+  def updatingGroup(groupId: Int): Future[UpdatingGroup] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+    } yield p).result
+  }.map(projects => UpdatingGroup(projects.exists(project => project.updating)))
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {
     val projects = getProjectsPerGroup(groupId)
