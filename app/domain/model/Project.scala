@@ -28,8 +28,8 @@ case class Group(
 }
 
 case class Project (
-  id: Int, description: String, name: String, nameWithNamespace: String, path: String, pathWithNamespace: String, createdAt: ZonedDateTime, defaultBranch: String,
-  sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String, groupId: Int
+ id: Int, description: String, name: String, nameWithNamespace: String, path: String, pathWithNamespace: String, createdAt: ZonedDateTime, defaultBranch: String,
+ sshUrlToRepo: String, httpUrlToRepo: String, webUrl: String, groupId: Int, updating: Boolean = false
 )
 
 case class Commit(
