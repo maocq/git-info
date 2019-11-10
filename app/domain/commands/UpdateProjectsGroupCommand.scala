@@ -36,15 +36,15 @@ class UpdateProjectsGroupCommand @Inject()(projectService: ProjectService) exten
     }*/
     projectService.getProjectsByGroup(groupID)
       .flatMap(projects => Task.traverse(projects){project => updateInfoProject(project.id)})
-      .map(_ =>
+      .map(p =>
         MessageDTO("Updating info").asRight[GError])
   }
 
 
-  private def updateInfoProject(projectID: Int): Task[JsValue] = {
+  private def updateInfoProject(projectID: Int): Task[String] = {
     projectService.updateInfoProject(projectID)
-      .fold(Json.toJson(_), Json.toJson(_))
-      .recover{case error => projectService.finishUpdating(projectID).runToFuture; Json.toJson(error.getMessage)}
+      .fold(_.message, r => (r.commits.commits.size + r.issues.size + r.prs.size).toString)
+      .recover{case error => projectService.finishUpdating(projectID).runToFuture; error.getMessage}
   }
 
 }
