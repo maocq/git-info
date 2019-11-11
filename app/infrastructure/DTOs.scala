@@ -14,7 +14,7 @@ case class CommitGitLabDTO(
 
 case class CommitDiffGitLabDTO(old_path: String, new_path: String, a_mode: String, b_mode: String, new_file: Boolean, renamed_file: Boolean, deleted_file: Boolean, diff: String)
 
-case class UserGitLabDTO(id: Int, name: String, username: String, state: String, avatar_url: String, web_url: String)
+case class UserGitLabDTO(id: Int, name: String, username: String, email: Option[String], state: String, avatar_url: String, web_url: String)
 
 case class IssueGitLabDTO(
   id : Int, iid : Int, project_id : Int, title : String, description : Option[String], state : String, created_at : ZonedDateTime, updated_at : ZonedDateTime,

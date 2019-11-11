@@ -203,7 +203,7 @@ class ProjectService @Inject()(
   }
 
   private def transformUsers(dtos: List[UserGitLabDTO]): EitherT[Task, GError, List[UserGit]] = EitherT.fromEither {
-    dtos.map(u => UserGit(u.id, u.name, u.username, u.avatar_url, u.web_url)).asRight
+    dtos.map(u => UserGit(u.id, u.name, u.username, u.email.getOrElse(u.username), u.avatar_url, u.web_url)).asRight
   }
 
   private def registerUsersGit(users: List[UserGit]): Task[List[UserGit]] = userRepository.insertAll(users)

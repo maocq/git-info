@@ -72,6 +72,7 @@ CREATE TABLE users
     id INTEGER NOT NULL,
     name VARCHAR(200) NOT NULL,
     username VARCHAR(200) NOT NULL,
+    email VARCHAR(250) NOT NULL,
     avatar_url VARCHAR(250) NOT NULL,
     web_url VARCHAR(250) NOT NULL,
 

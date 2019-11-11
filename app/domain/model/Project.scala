@@ -53,7 +53,7 @@ case class PR(
  targetBranch: String, sourceBranch: String, userNotesCount: Int, upvotes: Int, downvotes: Int, author: Int
 )
 
-case class UserGit(id: Int, name: String, username: String, avatarUrl: String, webUrl: String)
+case class UserGit(id: Int, name: String, username: String, email: String, avatarUrl: String, webUrl: String)
 
 case class Commits(commits: List[Commit], diffs: List[Diff])
 case class NewInfo(commits: Commits, issues: List[Issue], prs: List[PR])

@@ -11,10 +11,11 @@ object UserTable {
 
     def name = column[String]("name")
     def username = column[String]("username")
+    def email = column[String]("email")
     def state = column[String]("state")
     def avatarUrl = column[String]("avatar_url")
     def webUrl = column[String]("web_url")
 
-    def * = (id, name, username, avatarUrl, webUrl) <> (UserGitRecord.tupled, UserGitRecord.unapply)
+    def * = (id, name, username, email, avatarUrl, webUrl) <> (UserGitRecord.tupled, UserGitRecord.unapply)
   }
 }

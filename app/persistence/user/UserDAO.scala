@@ -7,7 +7,7 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.{ExecutionContext, Future}
 
 
-case class UserGitRecord(id: Int, name: String, username: String, avatarUrl: String, webUrl: String)
+case class UserGitRecord(id: Int, name: String, username: String, email: String, avatarUrl: String, webUrl: String)
 
 class UserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
