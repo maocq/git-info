@@ -12,6 +12,8 @@ GET     /groups/:id/impact          controllers.ProjectController.impactGroup(id
 GET     /groups/:id/issues          controllers.ProjectController.issuesGroup(id: Int)
 GET     /groups/:id/files           controllers.ProjectController.filesGroup(id: Int)
 GET     /groups/:id/updating        controllers.ProjectController.updatingGroup(id: Int)
+GET     /groups/:id/users           controllers.ProjectController.infoUsers(id: Int)
+
 
 
 POST    /group/register             controllers.ProjectController.registerGroup
@@ -26,7 +28,7 @@ POST    /project/delete             controllers.ProjectController.deleteProject
 #Eliminar
 GET     /issues                     controllers.HomeController.issues
 GET     /user-issues                controllers.HomeController.userIssuesClosed
-GET     /info-users                 controllers.ProjectController.infoUsers
+GET     /info-users                 controllers.ProjectController.infoUsersOld
 
 
 # Map static resources from the /public folder to the /assets URL path

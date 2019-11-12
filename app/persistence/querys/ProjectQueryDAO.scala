@@ -35,6 +35,7 @@ case class InfoGroupDTO(
 case class CategoryValueDTO(category: String, value: Int)
 case class InfoIssuesDTO(issuesClosed: Seq[CategoryValueDTO], users: Seq[CategoryValueDTO])
 case class LinesFile(project: String, file: String, lines: Int)
+case class InfoUser(user: String, commits: Int, additions: Int, deletions: Int, total: Int, firstCommit: ZonedDateTime, lastCommit: ZonedDateTime)
 case class UpdatingGroup(updating: Boolean)
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
@@ -108,6 +109,24 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       p <- projectsdb if g.id === p.groupId
     } yield p).result
   }.map(projects => UpdatingGroup(projects.exists(project => project.updating)))
+
+  def getInfoUsers(groupId: Int) = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+      d <- diffsdb if c.id === d.commitId
+    } yield (c, d)).groupBy {case(commit, _) => commit.committerEmail}
+      .map{case (commiter, tupla) => (
+        commiter,
+        tupla.map(w => w._1.id).countDistinct,
+        tupla.map(t => t._2.additions).sum.getOrElse(0),
+        tupla.map(t => t._2.deletions).sum.getOrElse(0),
+        tupla.map(t => t._2.additions).sum.getOrElse(0) - tupla.map(t => t._2.deletions).sum.getOrElse(0),
+        tupla.map(t => t._1.createdAt).min.getOrElse(ZonedDateTime.now()),
+        tupla.map(t => t._1.createdAt).max.getOrElse(ZonedDateTime.now())
+      )}.sortBy(_._5.desc).map(_.mapTo[InfoUser]).result
+  }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {
     val projects = getProjectsPerGroup(groupId)

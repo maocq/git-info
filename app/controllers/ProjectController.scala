@@ -118,11 +118,19 @@ class ProjectController @Inject()(
       }}
   }
 
+  def infoUsers(id: Int) = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.getInfoUsers(id)
+      .map(info => Ok(Json.toJson(info)))
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
+  }
 
 
 
 
-  def infoUsers() = Action.async { implicit request: Request[AnyContent] =>
+  def infoUsersOld() = Action.async { implicit request: Request[AnyContent] =>
     projectQueryDAO.commitUser().map { commits =>
       commits.groupBy(commit => commit.email).map(tuple => {
         val values = tuple._2.foldLeft((0,0,0)){ case (acc, nxt) =>  (acc._1 + 1, acc._2 + nxt.additions, acc._3 + nxt.deletions)}
