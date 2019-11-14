@@ -38,6 +38,7 @@ case class LinesFile(project: String, file: String, lines: Int)
 case class InfoUser(user: String, commits: Int, additions: Int, deletions: Int, total: Int, firstCommit: ZonedDateTime, lastCommit: ZonedDateTime)
 case class UpdatingGroup(updating: Boolean)
 case class ActivityGroup(hours: Seq[CategoryValueDTO], daysOfWeak: Seq[CategoryValueDTO])
+case class RelationPR(from: String, to: String, weight: Int)
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
@@ -138,6 +139,17 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       c <- commitsdb if p.id === c.projectId
     } yield c).groupBy(c => date_part(datePart, timezone("America/Bogota", c.createdAt)))
       .map{ case(hours, commits) => hours -> commits.length }.sortBy(_._1).map(_.mapTo[CategoryValueDTO]).result
+  }
+
+  def getRelationPRs(groupId: Int): Future[Seq[RelationPR]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      i <- prsdb if p.id === i.projectId
+      a <- usersdb if i.author === a.id
+      m <- usersdb if i.mergedBy === m.id
+    } yield (a, m)).groupBy{ case(author, mergeBy) => (author.username, mergeBy.username)}
+      .map{ case (group, tupla) => (group._1, group._2, tupla.length) }.sortBy(r => (r._1, r._2)).map(_.mapTo[RelationPR]).result
   }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {

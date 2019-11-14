@@ -139,7 +139,17 @@ class ProjectController @Inject()(
       }}
   }
 
-  private def getDay(number: String): String = number match {
+  def relationPRs(id: Int) = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.getRelationPRs(id)
+      .map(info => Ok(Json.toJson(info)))
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
+  }
+
+  private def getDay(number: String): String = {
+    number match {
       case "0" => "MONDAY"
       case "1" => "TUESDAY"
       case "2" => "WEDNESDAY"
@@ -148,6 +158,7 @@ class ProjectController @Inject()(
       case "5" => "SATURDAY"
       case _ => "SUNDAY"
     }
+  }
 
 
 
