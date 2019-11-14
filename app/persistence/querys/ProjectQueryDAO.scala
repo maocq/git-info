@@ -37,6 +37,7 @@ case class InfoIssuesDTO(issuesClosed: Seq[CategoryValueDTO], users: Seq[Categor
 case class LinesFile(project: String, file: String, lines: Int)
 case class InfoUser(user: String, commits: Int, additions: Int, deletions: Int, total: Int, firstCommit: ZonedDateTime, lastCommit: ZonedDateTime)
 case class UpdatingGroup(updating: Boolean)
+case class ActivityGroup(hours: Seq[CategoryValueDTO], daysOfWeak: Seq[CategoryValueDTO])
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
@@ -45,6 +46,8 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   import profile.api._
 
   val toChar = SimpleFunction.binary[ZonedDateTime, String, String]("to_char")
+  val date_part = SimpleFunction.binary[String, ZonedDateTime, String]("date_part")
+  val timezone = SimpleFunction.binary[String, ZonedDateTime, ZonedDateTime]("timezone")
 
   def getGroups(): Future[Seq[GroupRecord]] = db.run {
     groupsdb.result
@@ -126,6 +129,15 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
         tupla.map(t => t._1.createdAt).min.getOrElse(ZonedDateTime.now()),
         tupla.map(t => t._1.createdAt).max.getOrElse(ZonedDateTime.now())
       )}.sortBy(_._5.desc).map(_.mapTo[InfoUser]).result
+  }
+
+  def getActivityForDatePart(groupId: Int, datePart: String): Future[Seq[CategoryValueDTO]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+    } yield c).groupBy(c => date_part(datePart, timezone("America/Bogota", c.createdAt)))
+      .map{ case(hours, commits) => hours -> commits.length }.sortBy(_._1).map(_.mapTo[CategoryValueDTO]).result
   }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {

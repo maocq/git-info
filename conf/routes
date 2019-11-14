@@ -13,6 +13,7 @@ GET     /groups/:id/issues          controllers.ProjectController.issuesGroup(id
 GET     /groups/:id/files           controllers.ProjectController.filesGroup(id: Int)
 GET     /groups/:id/updating        controllers.ProjectController.updatingGroup(id: Int)
 GET     /groups/:id/users           controllers.ProjectController.infoUsers(id: Int)
+GET     /groups/:id/activity        controllers.ProjectController.activity(id: Int)
 
 
 

@@ -5,7 +5,7 @@ import domain.model.GError.DomainError
 import infrastructure.{FileLines, InfoUserDTO, ProjectFileLines, TransformerDTOsHTTP}
 import javax.inject.Inject
 import persistence.group.GroupDAO
-import persistence.querys.ProjectQueryDAO
+import persistence.querys.{ActivityGroup, ProjectQueryDAO}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 
@@ -126,6 +126,29 @@ class ProjectController @Inject()(
         InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
       }}
   }
+
+  def activity(id: Int) = Action.async { implicit request: Request[AnyContent] =>
+    val hour = projectQueryDAO.getActivityForDatePart(id, "hour")
+    val dayOfWeak = projectQueryDAO.getActivityForDatePart(id, "dow").map(_.map(cat => cat.copy(category = getDay(cat.category))))
+
+    hour.flatMap(h => dayOfWeak.map(d => ActivityGroup(h, d)))
+      .map(info => Ok(Json.toJson(info)))
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
+  }
+
+  private def getDay(number: String): String = number match {
+    case "0" => "MONDAY"
+    case "1" => "TUESDAY"
+    case "2" => "WEDNESDAY"
+    case "3" => "THURSDAY"
+    case "4" => "FRIDAY"
+    case "5" => "SATURDAY"
+    case _ => "SUNDAY"
+  }
+
 
 
 
