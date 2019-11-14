@@ -5,7 +5,7 @@ import domain.model.GError.DomainError
 import infrastructure.{FileLines, InfoUserDTO, ProjectFileLines, TransformerDTOsHTTP}
 import javax.inject.Inject
 import persistence.group.GroupDAO
-import persistence.querys.{ActivityGroup, ProjectQueryDAO}
+import persistence.querys.{ActivityGroup, DetailWeightAuthor, ProjectQueryDAO, ProjectWeightAuthors}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 
@@ -142,6 +142,19 @@ class ProjectController @Inject()(
   def relationPRs(id: Int) = Action.async { implicit request: Request[AnyContent] =>
     projectQueryDAO.getRelationPRs(id)
       .map(info => Ok(Json.toJson(info)))
+      .recover { case error => {
+        logger.error(error.getMessage, error)
+        InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))
+      }}
+  }
+
+  def projectsWeight(id: Int) = Action.async { implicit request: Request[AnyContent] =>
+    projectQueryDAO.getProjectWeight(id).map(p => {
+      p.groupBy(_.project).map{case (k,v) => {
+        val totalProject = v.map(_.number).sum
+        ProjectWeightAuthors(k, totalProject, v.map(p => DetailWeightAuthor(p.author, p.number, p.number / totalProject.toDouble * 100)))
+      }}.toList
+    }).map(info => Ok(Json.toJson(info)))
       .recover { case error => {
         logger.error(error.getMessage, error)
         InternalServerError(Json.toJson(DomainError("Internal server erorr", "30000", Option(error))))

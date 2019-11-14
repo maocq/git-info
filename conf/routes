@@ -15,6 +15,7 @@ GET     /groups/:id/updating        controllers.ProjectController.updatingGroup(
 GET     /groups/:id/users           controllers.ProjectController.infoUsers(id: Int)
 GET     /groups/:id/activity        controllers.ProjectController.activity(id: Int)
 GET     /groups/:id/relation-prs    controllers.ProjectController.relationPRs(id: Int)
+GET     /groups/:id/projects-weight controllers.ProjectController.projectsWeight(id: Int)
 
 
 

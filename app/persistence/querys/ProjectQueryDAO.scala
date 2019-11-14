@@ -39,6 +39,9 @@ case class InfoUser(user: String, commits: Int, additions: Int, deletions: Int, 
 case class UpdatingGroup(updating: Boolean)
 case class ActivityGroup(hours: Seq[CategoryValueDTO], daysOfWeak: Seq[CategoryValueDTO])
 case class RelationPR(from: String, to: String, weight: Int)
+case class ProjectWeight(project: String, author: String, number: Int)
+case class ProjectWeightAuthors(project: String, number: Int, authors: Seq[DetailWeightAuthor])
+case class DetailWeightAuthor(author: String, number: Int, percentage: Double)
 
 class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with TransformerQuery with ProjectAdapter{
@@ -150,6 +153,19 @@ class ProjectQueryDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       m <- usersdb if i.mergedBy === m.id
     } yield (a, m)).groupBy{ case(author, mergeBy) => (author.username, mergeBy.username)}
       .map{ case (group, tupla) => (group._1, group._2, tupla.length) }.sortBy(r => (r._1, r._2)).map(_.mapTo[RelationPR]).result
+  }
+
+  def getProjectWeight(groupId: Int): Future[Seq[ProjectWeight]] = db.run {
+    (for {
+      g <- groupsdb.filter(_.id === groupId)
+      p <- projectsdb if g.id === p.groupId
+      c <- commitsdb if p.id === c.projectId
+      d <- diffsdb if c.id === d.commitId
+    } yield (p, c, d)).groupBy{ case(pr, cm, _) => (pr.name, cm.committerEmail)}
+      .map{ case (group, tupla) => (
+        group._1, group._2,
+        tupla.map(t => t._3.additions).sum.getOrElse(0) - tupla.map(t => t._3.deletions).sum.getOrElse(0)
+      )}.sortBy(r => (r._1, r._3.desc)).map(_.mapTo[ProjectWeight]).result
   }
 
   def getAllInfoProject(groupId: Int): Future[InfoGroupDTO] = {
