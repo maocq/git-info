@@ -140,14 +140,14 @@ class ProjectController @Inject()(
   }
 
   private def getDay(number: String): String = number match {
-    case "0" => "MONDAY"
-    case "1" => "TUESDAY"
-    case "2" => "WEDNESDAY"
-    case "3" => "THURSDAY"
-    case "4" => "FRIDAY"
-    case "5" => "SATURDAY"
-    case _ => "SUNDAY"
-  }
+      case "0" => "MONDAY"
+      case "1" => "TUESDAY"
+      case "2" => "WEDNESDAY"
+      case "3" => "THURSDAY"
+      case "4" => "FRIDAY"
+      case "5" => "SATURDAY"
+      case _ => "SUNDAY"
+    }
 
 
 
