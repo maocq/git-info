@@ -152,7 +152,7 @@ class ProjectController @Inject()(
     projectQueryDAO.getProjectWeight(id).map(p => {
       p.groupBy(_.project).map{case (k,v) => {
         val totalProject = v.map(_.number).sum
-        ProjectWeightAuthors(k, totalProject, v.map(p => DetailWeightAuthor(p.author, p.number, p.number / totalProject.toDouble * 100)))
+        ProjectWeightAuthors(k, totalProject, v.map(p => DetailWeightAuthor(p.author, p.number, p.number / totalProject.toDouble)))
       }}.toList
     }).map(info => Ok(Json.toJson(info)))
       .recover { case error => {
