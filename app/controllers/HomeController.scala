@@ -1,56 +1,26 @@
 package controllers
 
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
-
-import cats.data.EitherT
-import cats.implicits._
 import infrastructure.TransformerDTOsHTTP
 import javax.inject._
-import monix.execution.Scheduler
-import persistence.project.{GitLabDB, IssueState}
-import persistence.querys.ProjectQueryDAO
-import play.api.libs.json.Json
+import persistence.project.IssueState
 import play.api.mvc._
-
-import scala.concurrent.{ExecutionContext, Future}
 
 case class IssuesForStatus(status: String, infoIssue: List[IssueState])
 
 @Singleton
 class HomeController @Inject()(
-  cc: ControllerComponents,
-  gitLab: GitLabDB,
-  projectQueryDAO: ProjectQueryDAO,
-)(implicit ec: ExecutionContext)
-  extends AbstractController(cc) with TransformerDTOsHTTP {
+  cc: ControllerComponents
+  //gitLab: GitLabDB,
+  //projectQueryDAO: ProjectQueryDAO,
+) extends AbstractController(cc) with TransformerDTOsHTTP {
 
-  implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
+  //implicit lazy val executor: Scheduler = monix.execution.Scheduler.Implicits.global
 
   def index() = Action { implicit request: Request[AnyContent] =>
-
-    projectQueryDAO.getAllInfoProject(1).foreach(e =>
-      println(e)
-    )
-    /*
-    p.updateInfoProject(222).value.runToFuture.recover{case es =>
-      es.toString
-    }.foreach(e =>
-      println(e)
-    )
-     */
-
-    /*
-    gitLabService.getAllCommits(222, None).runToFuture.recover{case es =>
-      es.toString}.foreach(e =>
-      println(e))
-     */
-
-    //s.test1().recover{case es => es.toString}.foreach(e => println(e))
-    //gitLabService.getMergeRequest(174, 1).map(s => s.toString).recover{case es => es.toString}.foreach(e => println(e))
     Ok(views.html.index())
   }
 
+  /*
   def userIssuesClosed() = Action.async {
     val end = LocalDate.now()
     val start = end.minusDays(90)
@@ -87,7 +57,6 @@ class HomeController @Inject()(
     issue.copy(infoIssue = issues)
   }
 
-
   def traverseFold[L, R, T](elements: List[T])(f: T => Future[Either[L, R]]): Future[Either[L, List[R]]] = {
     elements.foldLeft( EitherT(Future.successful(List.empty[R].asRight[L])) ) {
       (acc, nxt) => acc.flatMap(list => EitherT(f(nxt)).map(list :+ _))
@@ -101,4 +70,5 @@ class HomeController @Inject()(
   def sequenceEither[L, R](eithers: List[Either[L, R]]): Either[L, List[R]] = {
     eithers.foldLeft(List.empty[R].asRight[L])( (acc, nxt) => acc.flatMap(list => nxt.map(list :+ _)) )
   }
+   */
 }

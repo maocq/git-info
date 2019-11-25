@@ -29,8 +29,8 @@ POST    /project/delete             controllers.ProjectController.deleteProject
 
 
 #Eliminar
-GET     /issues                     controllers.HomeController.issues
-GET     /user-issues                controllers.HomeController.userIssuesClosed
+#GET     /issues                     controllers.HomeController.issues
+#GET     /user-issues                controllers.HomeController.userIssuesClosed
 GET     /info-users                 controllers.ProjectController.infoUsersOld
 
 
