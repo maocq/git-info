@@ -17,7 +17,9 @@ libraryDependencies ++= Seq(
   "org.postgresql"                  % "postgresql"               % "42.1.4",
   "org.typelevel"                   %% "cats-core"               % "2.0.0-M4",
   "io.monix"                        %% "monix"                   % "3.0.0-RC3",
-  "org.scalatestplus.play"          %% "scalatestplus-play"      % "4.0.3" % Test
+  "org.scalatestplus.play"          %% "scalatestplus-play"      % "4.0.3" % Test,
+  "org.mockito"                     % "mockito-core"             % "2.7.19" % Test,
+  "com.github.javafaker"            % "javafaker"                % "0.13" % Test
 )
 
 // Adds additional packages into Twirl
