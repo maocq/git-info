@@ -8,6 +8,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import persistence.commit.{CommitDAO, CommitRecord}
 import persistence.diff.{DiffDAO, DiffRecord}
 import persistence.group.{GroupDAO, GroupRecord}
+import persistence.project.{ProjectDAO, ProjectRecord}
 
 import scala.concurrent.Future
 
@@ -28,4 +29,11 @@ trait MockData extends MockitoSugar with Data {
   when(groupDAO.insert(any[GroupRecord])) thenReturn Future.successful(group)
   when(groupDAO.deleteGroup(any[Int])) thenReturn Future.successful(Option(group))
   when(groupDAO.update(any[GroupRecord])) thenReturn Future.successful(Option(group))
+
+  val projectDAO = mock[ProjectDAO]
+  when(projectDAO.findByID(any[Int])) thenReturn Future.successful(Option(project))
+  when(projectDAO.insert(any[ProjectRecord])) thenReturn Future.successful(project)
+  when(projectDAO.getProjectsByGroup(any[Int])) thenReturn Future.successful(List(project))
+  when(projectDAO.insertInfoCommits(any[List[CommitRecord]], any[List[DiffRecord]])) thenReturn Future.successful(List(commit), List(diff))
+  when(projectDAO.deleteInfoProject(any[Int])) thenReturn Future.successful(Option(project))
 }

@@ -6,6 +6,7 @@ import com.github.javafaker.Faker
 import persistence.commit.CommitRecord
 import persistence.diff.DiffRecord
 import persistence.group.GroupRecord
+import persistence.project.ProjectRecord
 
 
 trait Data {
@@ -19,5 +20,8 @@ trait Data {
     faker.bool().bool(), faker.bool().bool(), faker.bool().bool(), faker.lorem().paragraph(), faker.number().randomDigit(), faker.number().randomDigit(), faker.code().ean8())
 
   val group = GroupRecord(faker.number().randomDigit(), faker.name().title(), ZonedDateTime.now())
+
+  val project = ProjectRecord(faker.number().randomDigit(), faker.name().title(), faker.name().name(), faker.name().name(), faker.name().name(), faker.name().name(), ZonedDateTime.now(),
+    faker.name().name(), faker.name().name(), faker.name().name(), faker.name().name(), faker.number().randomDigit(), faker.bool().bool())
 
 }
