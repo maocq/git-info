@@ -6,6 +6,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import persistence.commit.{CommitDAO, CommitRecord}
+import persistence.diff.{DiffDAO, DiffRecord}
 
 import scala.concurrent.Future
 
@@ -16,4 +17,9 @@ trait MockData extends MockitoSugar with Data {
   when(commitDAO.insert(any[CommitRecord])) thenReturn Future.successful(commit)
   when(commitDAO.getLastDateCommit(any[Int])) thenReturn Future.successful(Option(ZonedDateTime.now()))
   when(commitDAO.getExistingId(any[List[String]])) thenReturn Future.successful(List(commit))
+
+  val diffDAO = mock[DiffDAO]
+
+  when(diffDAO.insertAll(any[List[DiffRecord]])) thenReturn Future.successful(List(diff))
+  when(diffDAO.insert(any[DiffRecord])) thenReturn Future.successful(diff)
 }
