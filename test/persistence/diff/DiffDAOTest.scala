@@ -17,7 +17,7 @@ class DiffDAOTest extends PlaySpec with MockData {
       result.head.commitId mustBe diff.commitId
     }
 
-    "Insert all" in {
+    "Insert" in {
       val future = diffDAO.insert(diff)
       val result = Await.result(future, Duration.Inf)
 
