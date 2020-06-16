@@ -16,7 +16,7 @@ import scala.util.Try
 class GitLabService@Inject()(http: ServiceHTTP, cc: ControllerComponents)
                             (implicit ec: ExecutionContext) extends TransformerDTOs {
 
-  private val token = "saz8spC5AyehUEismJW4"
+  private val token = "xxx"
 
   def getProject(projectId: Int): Task[Either[GError, ProjectGitLabDTO]] = Task.deferFuture {
     http.get[ProjectGitLabDTO](s"https://gitlab.seven4n.com/api/v4/projects/$projectId",
